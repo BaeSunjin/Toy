@@ -17,7 +17,7 @@ private:
 public:
 
   static void CreateSquadUnit(const SquadUnitsInfo& _squad_units_info,
-    TArray<TWeakObjectPtr<ADefaultUnit>>& _out);
+                              TArray<TWeakObjectPtr<ADefaultUnit>>& _out);
 
   //race : 종족
   static bool ToGenerateClass(const EPlayerRace& _race, UClass*& _out);
@@ -26,7 +26,7 @@ public:
 
 
 void SquadUnitMaker::CreateSquadUnit(const SquadUnitsInfo& _squad_units_info,
-  TArray<TWeakObjectPtr<ADefaultUnit>>& _out)
+                                    TArray<TWeakObjectPtr<ADefaultUnit>>& _out)
 {
 
   SJ_ASSERT(GWorld);
@@ -34,18 +34,14 @@ void SquadUnitMaker::CreateSquadUnit(const SquadUnitsInfo& _squad_units_info,
   // 유닛 생성후 TArray<TWeakObjectPtr<ADefaultUnit>> 에 저장한다.
   UClass* generate_class = nullptr;
   SJ_ASSERT(ToGenerateClass(_squad_units_info.unit_type_, generate_class));
+  SJ_ASSERT(generate_class);
 
   for (int i = 0; i < _squad_units_info.unit_num_; i++) {
-
     if (generate_class != nullptr) {
       auto new_unit = GWorld->SpawnActor(generate_class);
       auto cunverted_pointer = Cast<ADefaultUnit>(new_unit);
       _out.Add(cunverted_pointer);
     }
-    else {
-      SJ_ASSERT(false);
-    }
-
   }
 
 }
@@ -83,24 +79,29 @@ SquadUnitsInfo::SquadUnitsInfo(const int& _unit_num,
 
 }
 
-void SquadMaker::MakeSquad(const SquadUnitsInfo& _info,
+bool SquadMaker::MakeSquad(const SquadUnitsInfo& _info,
                            const FVector& _spawn_pos,
                            const FVector2D& _squad_forward,
-                           ASquad& _out)
+                           ASquad*& _out)
 {
-  
+ 
+  SJ_ASSERT(GWorld);
+  _out = GWorld->SpawnActor<ASquad>();
 
   SJ_ASSERT(_squad_forward.Size() == 1.0f);
-  SquadUnitMaker::CreateSquadUnit(_info, _out.units_);
+  SquadUnitMaker::CreateSquadUnit(_info, _out->units_);
+
+  for (auto unit : _out->units_) {
+    unit->SetSquad(_out);
+  }
 
   //TODO 대열에 관하여 작성해야됨
-  _out.array_vertical_ = 5;
-  _out.array_horizental_ = 2;
+  _out->array_vertical_ = 5;
+  _out->array_horizental_ = 2;
 
-  //_out.Init(_spawn_pos, _squad_forward);
-
-  
-  
+  _out->Init(_spawn_pos, _squad_forward);
+ 
+  return true;
 }
 
 

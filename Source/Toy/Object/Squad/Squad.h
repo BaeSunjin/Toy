@@ -45,6 +45,9 @@ public:
   int array_vertical_;
   int array_horizental_;
 
+  float unit_vertical_interval_;
+  float unit_hoizental_interval_;
+
 private:
 
   FVector2D squad_forward_;
@@ -52,29 +55,32 @@ private:
 
   FVector2D squad_pos_;
 
+  UPROPERTY(VisibleDefaultsOnly)
+  USceneComponent* root_component_;
+
 public:
 
   void Init(const FVector& _pos,const FVector2D& _forward);
-  void InitUnitPos();
+  void InitUnitTransform();
 
   // 2D로 인자를 받는 이유는 스쿼드의 움직임처리는 xy 좌표로만 동작하기 때문
   void MoveSquad(const FVector& _pos);
   void SetHighLight(bool _light_on);
 
-  FVector2D GetSquadCenter();
-
 private:
 
-  void UnitsMove(const FVector& _pos);
+  void UnitsMove(const TArray<FVector>& _goals);
   FVector GetUnitGoalPos(const FVector& _move_pos,
                          const float& _vertical_interval, 
                          const float& _horziontal_interval_,
                          const int& _soldier_num);
 
+  bool MakeGoals(const FVector& _move_pos, TArray<FVector>& _out_goals);
+
   bool CheckNeedRearrange(const FVector2D& _move_dir);
 
   //대열 초기화
-  void RearrangeSquad(const FVector2D& _pos);
+  void RearrangeSquad(const TArray<FVector>& goals);
 
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;

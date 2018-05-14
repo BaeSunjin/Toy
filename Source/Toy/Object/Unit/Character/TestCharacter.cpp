@@ -16,7 +16,6 @@
 ATestCharacter::ATestCharacter(const FObjectInitializer& _objectInitializer)
 {
 
-
   // enable Tick function
   PrimaryActorTick.bCanEverTick = true;
 
@@ -50,8 +49,9 @@ ATestCharacter::ATestCharacter(const FObjectInitializer& _objectInitializer)
 
   camera_zoom_speed_ = 200.f;                // wheel
   camera_rotation_speed_ = 1.f;                // wheel + ctrl
-  camera_movement_speed_ = 3000.f;            // in all _dirs
+  camera_movement_speed_ = 1000.f;            // in all _dirs
 
+  camera_fast_move_ = false;
   can_camera_move_ = true;
   is_rotation_ = false;
 
@@ -79,15 +79,20 @@ void ATestCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInpu
   PlayerInputComponent->BindAction("ZoomInByWheel", IE_Pressed, this, &ATestCharacter::ZoomInByWheel);
 
   // yaw and pitch (mouse right + scroll)
-  PlayerInputComponent->BindAction("OnMouseRight", IE_Pressed, this, &ATestCharacter::PressMouseRight);
-  PlayerInputComponent->BindAction("OnMouseRight", IE_Released, this, &ATestCharacter::ReleasMouseRight);
+  PlayerInputComponent->BindAction("MouseRight", IE_Pressed, this, &ATestCharacter::PressMouseRight);
+  PlayerInputComponent->BindAction("MouseRight", IE_Released, this, &ATestCharacter::ReleasMouseRight);
 
-  PlayerInputComponent->BindAction("OnMouseLeft", IE_Pressed, this, &ATestCharacter::PressMouseLeft);
-  PlayerInputComponent->BindAction("OnMouseLeft", IE_Released, this, &ATestCharacter::ReleasMouseLeft);
+  PlayerInputComponent->BindAction("MouseLeft", IE_Pressed, this, &ATestCharacter::PressMouseLeft);
+  PlayerInputComponent->BindAction("MouseLeft", IE_Released, this, &ATestCharacter::ReleasMouseLeft);
+
+  // move Speed
+  PlayerInputComponent->BindAction("FastMoveInput", IE_Pressed, this, &ATestCharacter::PressFastMoveInput);
+  PlayerInputComponent->BindAction("FastMoveInput", IE_Released, this, &ATestCharacter::ReleasFastMoveInput);
+
 
   //Pause
-  PlayerInputComponent->BindAction("OnPause", IE_Pressed, this, &ATestCharacter::OnPause);
-  PlayerInputComponent->BindAction("OffPause", IE_Pressed, this, &ATestCharacter::OffPause);
+  PlayerInputComponent->BindAction("Pause", IE_Pressed, this, &ATestCharacter::OnPause);
+  PlayerInputComponent->BindAction("Pause", IE_Pressed, this, &ATestCharacter::OffPause);
 
 
   // keyboard move (WASD, Home/end)
@@ -95,9 +100,6 @@ void ATestCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInpu
   PlayerInputComponent->BindAxis("MoveRight", this, &ATestCharacter::MoveCameraRightInput);
   PlayerInputComponent->BindAxis("MoveUp", this, &ATestCharacter::MoveCameraUpInput);
   PlayerInputComponent->BindAxis("ZoomIn", this, &ATestCharacter::ZoomCameraInInput);
-
-  // double speed (WASD +Shift)
-  PlayerInputComponent->BindAxis("FastMove", this, &ATestCharacter::FastMoveInput);
 
 }
 
@@ -127,19 +129,17 @@ void ATestCharacter::ZoomOutByWheel()
 }
 
 
-
-void ATestCharacter::FastMoveInput(float _dir)
+void ATestCharacter::PressFastMoveInput()
 {
   if (!can_camera_move_) { return; }
+  camera_fast_move_ = true;
+}
 
-  // left or right does not matter, to set double speed in any _dir
-  camera_movement_speed_ = FMath::Abs(_dir) * 2.0f;
+void ATestCharacter::ReleasFastMoveInput() {
 
-  // used as multiplier so must be 1 if not pressed
-  if (camera_movement_speed_ == 0.0f)
-  {
-    camera_movement_speed_ = 1.0f;
-  }
+  if (!can_camera_move_) { return; }
+  camera_fast_move_ = false;
+
 }
 
 void ATestCharacter::PressMouseRight() {
@@ -218,7 +218,7 @@ void ATestCharacter::MoveSquad() {
   }
 }
 
-bool ATestCharacter::GetSelectingUnit(ADefaultUnit* _out) {
+bool ATestCharacter::GetSelectingUnit(ADefaultUnit*& _out) {
 
   // mouse data
   FVector mouse_pos;
@@ -412,21 +412,18 @@ void ATestCharacter::ZoomCameraInInput(float _dir)
 FVector ATestCharacter::MoveCameraForward(float _dir)
 {
   float movement_value = _dir * camera_movement_speed_;
-  FVector delta_movement = movement_value * GetActorForwardVector();
-  //FVector NewLocation = GetActorLocation() + delta_movement;
-  //SetActorLocation(NewLocation);
 
-  return delta_movement;
+  FVector frame_movement = movement_value * GetActorForwardVector();
+  return frame_movement;
 }
 
 
 FVector ATestCharacter::MoveCameraRight(float _dir)
 {
   float movement_value = _dir * camera_movement_speed_;
-  FVector delta_movement = movement_value * GetActorRightVector();
-  //FVector NewLocation = GetActorLocation() + delta_movement;
-  //SetActorLocation(NewLocation);
-  return delta_movement;
+
+  FVector frame_movement = movement_value * GetActorRightVector();
+  return frame_movement;
 }
 
 
@@ -493,12 +490,11 @@ void ATestCharacter::Tick(float _delta)
   FVector actor_location = GetActorLocation();
   FVector actual_movement = FVector::ZeroVector;
 
-  //움직일 방향 계산.
-  actual_movement +=
-    MoveCameraForward(move_forward_value_ * camera_movement_speed_ * _delta);
-
-  actual_movement +=
-    MoveCameraRight(move_right_value_ * camera_movement_speed_ * _delta);
+  actual_movement += MoveCameraForward(move_forward_value_ * _delta);
+  actual_movement += MoveCameraRight(move_right_value_ * _delta);
+  if (camera_fast_move_) {
+    actual_movement *= 2.0f;
+  }
 
   actor_location += actual_movement;
 

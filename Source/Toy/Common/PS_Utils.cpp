@@ -22,8 +22,10 @@ FVector2D SJ_RotateUtills::ToRight(const FVector2D& _forward) {
   SJ_ASSERT(_forward.Size() == 1.0f);
   static const float rotate_angle = 90.0f;
 
-  float sin_value = FMath::Sin(rotate_angle);
-  float cos_value = FMath::Cos(rotate_angle);
+  float radian = FMath::DegreesToRadians(rotate_angle);
+
+  float sin_value = FMath::Sin(radian);
+  float cos_value = FMath::Cos(radian);
 
   // rotate point
   float x_new = _forward.X * cos_value - _forward.Y * sin_value;
@@ -71,12 +73,19 @@ FVector2D SJ_VectorUtills::ToProjection(const FVector2D& _pivot,
 
 bool SJ_VectorUtills::Normalize(FVector2D& _vec) {
 
+  //TODO...size 가 1이 아닌경우가 있다.
   float size = _vec.Size();
-  if (size != 0) {
-    return false;
-  }
-
   _vec = _vec / size;
+
+  return true;
+}
+
+bool SJ_VectorUtills::IsNormalized(const FVector2D& _vec) {
+
+  //TODO 위랑 같음.
+  
+  if (_vec.Size() == 1) {  return true; }
+  
   return true;
 }
 

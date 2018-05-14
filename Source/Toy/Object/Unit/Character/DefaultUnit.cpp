@@ -99,10 +99,14 @@ void ADefaultUnit::BeginPlay()
 
 }
 
-TWeakObjectPtr<ASquad> ADefaultUnit::GetSquad() {
+const TWeakObjectPtr<ASquad>& ADefaultUnit::GetSquad() {
 
   return squad_;
 
+}
+
+void ADefaultUnit::SetSquad(const TWeakObjectPtr<ASquad>& data) {
+  squad_ = data;
 }
 
 
@@ -147,7 +151,7 @@ void ADefaultUnit::UnitIntervalInit() {
 
 
 void ADefaultUnit::MoveTo(const FVector& _move_pos,
-  const FVector& _normal_look_at)
+                          const FVector& _normal_look_at) const
 {
 
   SJ_ASSERT(_normal_look_at.IsNormalized());
@@ -155,6 +159,7 @@ void ADefaultUnit::MoveTo(const FVector& _move_pos,
 
   ai_controller->MoveToLocation(_move_pos);
 
+  log_pos_ = _move_pos;
 }
 
 
@@ -162,7 +167,7 @@ void ADefaultUnit::MoveTo(const FVector& _move_pos,
 void ADefaultUnit::Tick(float DeltaTime)
 {
   Super::Tick(DeltaTime);
-  //DrawDebugLine(GetWorld(), log_pos_, log_pos_ + FVector(0, 0, 100.f), FColor::Red);
+  DrawDebugLine(GetWorld(), log_pos_, log_pos_ + FVector(0, 0, 100.f), FColor::Red);
 
 }
 

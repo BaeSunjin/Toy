@@ -24,16 +24,23 @@ public:
 	// Sets default values for this actor's properties
 	AUnitSpawnPoint();
 
-  // return Preferred
-  bool IsPermission(const TeamFlag& _flag);
-  void SetUse(bool _use);
-
-  //TODO 코드상에서 숨길수 있나?
 protected:
 
+  UPROPERTY(VisibleDefaultsOnly)
+  USceneComponent* root_component_;
+
+  //TODO 코드상에서 숨길수 있나?
   UPROPERTY(EditAnywhere)
   TeamFlag team_flag_;
 
   UPROPERTY(EditAnywhere)
   bool is_used;
+
+
+public:
+
+  // return Preferred
+  bool IsPermission(const TeamFlag& _flag);
+  void SetUse(bool _use);
+
 };

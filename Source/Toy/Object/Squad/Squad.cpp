@@ -2,113 +2,22 @@
 
 #include "Squad.h"
 #include "Common/PS_Utils.h"
+#include <limits>
 #include "Object/Unit/Character/DefaultUnit.h"
 #include "Runtime/Engine/Classes/Engine/World.h"
 
 #define REARRAGNE_DEGREE 0.7071f
-
-
-struct FSortByPosition
-{
-  //squad move의 값에 Z를 제거해야하나?
-  FSortByPosition(const FVector2D& _move,
-    const FVector2D& _forward,
-    const FVector2D& _right)
-    : squad_move_(_move), forward_(_forward), right_(_right)
-  { }
-
-public:
-  /* The Location to use in our Sort comparision. */
-  FVector2D squad_move_;
-  FVector2D forward_;
-  FVector2D right_;
-
-  bool operator()(const TWeakObjectPtr<ADefaultUnit>& A,
-    const TWeakObjectPtr<ADefaultUnit>& B) const
-  {
-    // algorithm  https://blog.naver.com/baehun92/221268547904
-
-
-    if (A.IsValid() && B.IsValid()) {
-
-      FVector2D a_pos = SJ_VectorUtills::ToVector2D(A.Get()->GetActorLocation());
-      FVector2D b_pos = SJ_VectorUtills::ToVector2D(B.Get()->GetActorLocation());
-
-      FVector2D first_actor_vec = squad_move_ - a_pos;
-      FVector2D second_actor_vec = squad_move_ - b_pos;
-
-      //forward Calculate
-      {
-
-        //Get forward projection vector
-        FVector2D first_projection_forward =
-          SJ_VectorUtills::ToProjection(forward_, first_actor_vec);
-
-        FVector2D second_projection_forward =
-          SJ_VectorUtills::ToProjection(forward_, second_actor_vec);
-
-        float first_size = first_projection_forward.Size();
-        float second_size = second_projection_forward.Size();
-
-        float half_horizontal_interval_ =
-          A.Get()->GetHirzontalInterval() / 2.0f;
-
-        //50.0f is character half capsule component radius
-        if (FMath::Abs(first_size - second_size) > half_horizontal_interval_)
-        {
-
-          return first_size < second_size;
-
-        }
-      }
-
-
-      //Right Calculate
-      {
-
-        //Get Right projection vector
-        FVector2D first_projection_right =
-          SJ_VectorUtills::ToProjection(right_, first_actor_vec);
-        FVector2D second_projection_right =
-          SJ_VectorUtills::ToProjection(right_, second_actor_vec);
-
-        float first_size = first_projection_right.Size();
-        float second_size = second_projection_right.Size();
-
-        first_projection_right.Normalize();
-        second_projection_right.Normalize();
-
-        //if same dir
-        if (first_projection_right == right_)
-        {
-          first_size = -first_size;
-        }
-        if (second_projection_right == right_) {
-          second_size = -second_size;
-        }
-
-        /*UE_LOG(LogTemp, Error, TEXT("First Name : %s Second Name : %s \n first size : %f second size : %f"),
-          *A.Get()->GetName(), *B.Get()->GetName(), first_size, second_size);
-        UE_LOG(LogTemp, Warning, TEXT("first_projection_right : %s"), *first_projection_right.ToString());*/
-
-        return first_size < second_size;
-      }
-    }
-    else {
-
-      //Sort Fail
-      SJ_ASSERT(false);
-      return false;
-    }
-  }
-  //이전 코드는 D Backup에 존재함
-};
 
 // Sets default values
 ASquad::ASquad()
 {
   // Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
   PrimaryActorTick.bCanEverTick = true;
+
+  root_component_ = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
+  root_component_->SetRelativeLocation(FVector(0, 0, 0));
+  SetRootComponent(root_component_);
+
   squad_forward_ = FVector2D(1, 0);
   squad_right_ = FVector2D(0, 1);
 
@@ -122,34 +31,37 @@ void ASquad::Init(const FVector& _pos, const FVector2D& _forward)
   squad_forward_ = _forward;
   squad_right_ = SJ_RotateUtills::ToRight(_forward);
 
-  InitUnitPos();
+  InitUnitTransform();
+
 
 }
 
-void ASquad::InitUnitPos() {
+void ASquad::InitUnitTransform() {
 
 
   SJ_ASSERT(units_.Num());
 
-  float vertical_interval = 0;
-  float horizontal_interval = 0;
-
   if (units_[0].IsValid()) {
-    vertical_interval = units_[0].Get()->GetVerticalInterval();
-    horizontal_interval = units_[0].Get()->GetHirzontalInterval();
+    unit_vertical_interval_ = units_[0].Get()->GetVerticalInterval();
+    unit_hoizental_interval_ = units_[0].Get()->GetHirzontalInterval();
   }
 
   //TODO 유닛이 사용 불가능할떄 간격을 가지고 오지 못한다. 처리 방법필요
-  SJ_ASSERT(vertical_interval);
-  SJ_ASSERT(horizontal_interval);
+  SJ_ASSERT(unit_vertical_interval_);
+  SJ_ASSERT(unit_hoizental_interval_);
 
   for (int soldier_num = 0; soldier_num < units_.Num(); soldier_num++) {
-    FVector init_pos = GetUnitGoalPos(GetActorLocation(), vertical_interval,
-                                      horizontal_interval, soldier_num);
+
+    FVector init_pos = GetUnitGoalPos(GetActorLocation(), unit_vertical_interval_,
+                                      unit_vertical_interval_, soldier_num);
 
     SJ_ASSERT(units_[soldier_num].IsValid());
+
+    // position init
     auto unit_ref = units_[soldier_num].Get();
     unit_ref->SetActorLocation(init_pos);
+
+    // rotation init
     FVector forward = SJ_VectorUtills::ToVector3D(squad_forward_);
     unit_ref->SetActorRotation(forward.Rotation());
       
@@ -162,11 +74,9 @@ void ASquad::MoveSquad(const FVector& _pos)
 
   SJ_ASSERT(units_.Num());
 
-  // 이동 위치에 따라 유닛들의 위치를 재배열한다.
-  squad_pos_ = GetSquadCenter();
-
   FVector2D move_pos_2d = SJ_VectorUtills::ToVector2D(_pos);
   FVector2D move_dir = move_pos_2d - squad_pos_;
+  SJ_ASSERT(SJ_VectorUtills::Normalize(move_dir));
 
   //이전의 squad 방향과 비교하여 재배열 할지 구분짓는다.
   bool do_rearange = CheckNeedRearrange(move_dir);
@@ -179,12 +89,15 @@ void ASquad::MoveSquad(const FVector& _pos)
   squad_right_ = SJ_RotateUtills::ToRight(squad_forward_);
   SJ_ASSERT(SJ_VectorUtills::Normalize(squad_right_));
 
+  //TODO 2D 벡터로 변경해야하나 고민필요.
+  TArray<FVector> goals;
+  SJ_ASSERT(MakeGoals(_pos, goals));
+
   if (do_rearange) {
-    RearrangeSquad(move_pos_2d);
+    RearrangeSquad(goals);
   }
 
-  UnitsMove(_pos);
-
+  UnitsMove(goals);
   SetActorLocation(_pos);
 
 }
@@ -200,65 +113,23 @@ void ASquad::SetHighLight(bool _light_on)
     }
 }
 
-
-//TODO 예외에 관하여 처리해야된다.
-FVector2D ASquad::GetSquadCenter() {
-
-  int edge_left_up = 0;
-  int edge_right_up = array_vertical_ - 1;
-  int edge_left_down = array_vertical_ * array_horizental_ - array_horizental_;
-  int edge_right_down = array_vertical_ * array_horizental_ - 1;
-
-  int unit_num = units_.Num();
-  bool success = (edge_left_up < unit_num && edge_right_up < unit_num &&
-    edge_left_down < unit_num && edge_right_down < unit_num);
-
-  SJ_ASSERT(success);
-
-  if (units_[edge_left_up].IsValid() && units_[edge_right_up].IsValid() &&
-    units_[edge_left_down].IsValid() && units_[edge_right_down].IsValid()) {
-
-    FVector left_up_pos = units_[edge_left_up].Get()->GetActorLocation();
-    FVector right_up_pos = units_[edge_right_up].Get()->GetActorLocation();
-    FVector left_donw_pos = units_[edge_left_down].Get()->GetActorLocation();
-    FVector right_donw_pos = units_[edge_right_down].Get()->GetActorLocation();
-
-    FVector average = (left_up_pos + right_up_pos +
-      left_donw_pos + right_donw_pos) / 4.0f;
-
-    return SJ_VectorUtills::ToVector2D(average);;
-
-  }
-
-  SJ_ASSERT(false);
-  return FVector2D(0, 0);
-
-}
-
 //유닛 하나하나에게 이동할 위치를 알려준다.
-void ASquad::UnitsMove(const FVector& _pos)
+void ASquad::UnitsMove(const TArray<FVector>& _goals)
 {
+ 
+  SJ_ASSERT(_goals.Num());
   SJ_ASSERT(units_.Num());
+  SJ_ASSERT(_goals.Num() == units_.Num());
 
-  float vertical_interval = 0;
-  float horizontal_interval = 0;
+  FVector forward = SJ_VectorUtills::ToVector3D(squad_forward_);
+  SJ_ASSERT(forward.Normalize());
 
-  if (units_[0].IsValid()) {
-    vertical_interval = units_[0].Get()->GetVerticalInterval();
-    horizontal_interval = units_[0].Get()->GetHirzontalInterval();
-  }
+  int num = _goals.Num();
+  for (int i = 0; i < num; i++) {
 
-  //TODO 유닛이 사용 불가능할떄 간격을 가지고 오지 못한다. 처리 방법필요
-  SJ_ASSERT(vertical_interval);
-  SJ_ASSERT(horizontal_interval);
-
-  for (int soldier_num = 0; soldier_num < units_.Num(); soldier_num++) {
-    FVector goal_pos = GetUnitGoalPos(_pos, vertical_interval,
-                                        horizontal_interval, soldier_num);
-    
-    SJ_ASSERT(units_[soldier_num].IsValid());
-    auto unit_ref = units_[soldier_num].Get();
-    unit_ref->MoveTo(goal_pos, SJ_VectorUtills::ToVector3D(squad_forward_));
+    SJ_ASSERT(units_[i].IsValid());
+    auto unit = units_[i].Get();
+    unit->MoveTo(_goals[i], forward);
   }
 }
 
@@ -277,6 +148,7 @@ FVector ASquad::GetUnitGoalPos(const FVector& _move_pos,
   //각 유닛의 최종 목적지 계산 및 이동 명령
   SJ_ASSERT(units_.Num());
   auto unit = units_[_soldier_num];
+
   SJ_ASSERT(unit.IsValid());
 
   auto unit_ref = unit.Get();
@@ -300,20 +172,90 @@ FVector ASquad::GetUnitGoalPos(const FVector& _move_pos,
 
 }
 
+bool ASquad::MakeGoals(const FVector& _move_pos, TArray<FVector>& _out_goals)
+{
+
+  int unit_num = units_.Num();
+  SJ_ASSERT(unit_num);
+
+  for (int soldier_num = 0; soldier_num < unit_num; soldier_num++) {
+    
+    FVector GoalPos = GetUnitGoalPos(_move_pos, unit_vertical_interval_,
+                                     unit_hoizental_interval_, soldier_num);
+    
+    _out_goals.Add(GoalPos);
+  }
+
+  if (_out_goals.Num() != unit_num) { return false; }
+  return true;
+  
+}
+
 bool ASquad::CheckNeedRearrange(const FVector2D& _move_dir) {
 
+  SJ_ASSERT(SJ_VectorUtills::IsNormalized(_move_dir));
 
   float dot_scala = FVector2D::DotProduct(squad_forward_, _move_dir);
 
   //REARRAGNE_DEGREE = 45 dgree
-  return dot_scala > REARRAGNE_DEGREE;
+  return dot_scala < REARRAGNE_DEGREE;
 
 }
 
-void ASquad::RearrangeSquad(const FVector2D& _pos) {
+void ASquad::RearrangeSquad(const TArray<FVector>& goals)
+{
+  int goal_num = goals.Num();
+  int unit_num = units_.Num();
+  SJ_ASSERT(goal_num);
+  SJ_ASSERT(unit_num);
+  SJ_ASSERT(goal_num == unit_num);
 
-  //배열의 순서가 유닛 나열의 순서
-  units_.HeapSort(FSortByPosition(_pos, squad_forward_, squad_right_));
+  // 의도하는 동작은 goals의 각 요소의 idx와
+  // units_에서의 가장 짧은 거리를 가진 유닛의 idx를
+  // 같게 만들어 준다.
+
+
+  int array_num = goal_num;
+  for (int goal_idx = 0 ; goal_idx < (goal_num - 1) ; goal_idx++) {
+
+    int near_unit_idx = goal_idx;
+    float length = std::numeric_limits<float>::max();
+
+    for (int unit_idx = goal_idx; unit_idx < array_num; unit_idx++) {
+
+      SJ_ASSERT(units_[unit_idx].IsValid());
+
+      auto unit = units_[unit_idx].Get();
+      FVector unit_pos = unit->GetActorLocation();
+      float new_length = (goals[goal_idx] - unit_pos).SizeSquared();
+      
+      if (new_length < length) {
+        length = new_length;
+        near_unit_idx = unit_idx;
+      }
+    }
+
+
+    // 유닛의 위치 변경 필요 x
+    if (near_unit_idx == goal_idx) { continue; }
+
+    // 유닛의 위치를 변경한다.
+    UE_LOG(LogTemp, Error, TEXT("Swap %d "), near_unit_idx);
+    units_.Swap(goal_idx, near_unit_idx);
+
+  }
+
+  UE_LOG(LogTemp, Error, TEXT("123213213            "));
+
+
+  //유닛에 숫자부여
+  //추후에 사용가능성 많음..
+  int count = 0;
+  for (auto unit : units_) {
+    SJ_ASSERT(unit.IsValid());
+    unit.Get()->soldier_num_ = count;
+    count++;
+  }
 
 }
 
@@ -330,4 +272,5 @@ void ASquad::Tick(float DeltaTime)
   Super::Tick(DeltaTime);
 
 }
+
 

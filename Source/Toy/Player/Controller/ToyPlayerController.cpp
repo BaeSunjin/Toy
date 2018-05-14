@@ -6,7 +6,7 @@
 
 AToyPlayerController::AToyPlayerController(const FObjectInitializer& _objectInitializer) {
 
-  UE_LOG(LogTemp, Error, TEXT("PlayerControlelr Initializer"));
+  UE_LOG(LogTemp, Log, TEXT("PlayerControlelr Initializer"));
 
   bShowMouseCursor = true;
   bEnableClickEvents = true;

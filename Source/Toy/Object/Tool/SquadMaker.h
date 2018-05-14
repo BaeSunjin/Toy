@@ -33,11 +33,12 @@ private:
   //생성 금지
   SquadMaker();
 
+
 public:
   
-  static void MakeSquad(const SquadUnitsInfo& _info,
+  static bool MakeSquad(const SquadUnitsInfo& _info,
                         const FVector& _spawn_pos,
                         const FVector2D& _squad_forward,
-                        ASquad& _out);
+                        ASquad*& _out);
 
 };

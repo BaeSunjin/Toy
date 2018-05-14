@@ -73,6 +73,8 @@ public:
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Camera)
 	bool can_camera_move_;
                              
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Camera)
+  bool camera_fast_move_;
 
   // --------- root boody (character) movement
 
@@ -113,10 +115,8 @@ public:
   void ZoomInByWheel();
   void ZoomOutByWheel();
 
-  /** Left or Right Shift is pressed
-  * @param direcation - (1.0 for Right, -1.0 for Left)
-  */
-  void FastMoveInput(float _dir);
+  void PressFastMoveInput();
+  void ReleasFastMoveInput();
 
   /** press right mouse button */
   void PressMouseRight();
@@ -199,7 +199,7 @@ private:
 
   void RotateCamera();
 
-  bool GetSelectingUnit(ADefaultUnit* _out);
+  bool GetSelectingUnit(ADefaultUnit*& _out);
   void SetNewSquad(const TWeakObjectPtr<ASquad>& _squad);
 
 public:

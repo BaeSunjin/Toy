@@ -42,11 +42,14 @@ void AToyGameModeBase::Tick(float _delt) {
   
   if (first == false) return;
 
+  
   int unit_num = 10;
   EPlayerRace unit_type = EPlayerRace::kHuman;
   SquadUnitsInfo test_units_info(10, unit_type);
   TeamFlag team_flag = TeamFlag::kRed;
 
+
+  // TODO : Spawn 위치를 결정해주는 부분을 다른 부분으로 이동해야한다.
   FVector spawn_pos;
   bool find_spawn_pos = false;
   for (TActorIterator<AUnitSpawnPoint> actor_itr(GetWorld()); actor_itr; ++actor_itr)
@@ -61,10 +64,12 @@ void AToyGameModeBase::Tick(float _delt) {
 
   SJ_ASSERT(find_spawn_pos);
 
-  auto squad = GWorld->SpawnActor<ASquad>();
-  ////TODO 스폰 위치 찻아주기
-  SquadMaker::MakeSquad(test_units_info, spawn_pos,
-                        FVector2D(1.0f, 0.0f), *squad);
+  ASquad* squad = nullptr;
+  SJ_ASSERT(SquadMaker::MakeSquad(test_units_info, spawn_pos,
+                                  FVector2D(1.0f, 0.0f), squad));
+
+  //생성확인.
+  SJ_ASSERT(squad);
 
   first = false;
 

@@ -25,8 +25,9 @@ namespace SJ_VectorUtills{
   FVector2D ToProjection(const FVector2D& _pivot,
                          const FVector2D& _projection_vec);
 
-
+  
   bool Normalize(FVector2D& _vec);
+  bool IsNormalized(const FVector2D& _vec);
 
 }
 

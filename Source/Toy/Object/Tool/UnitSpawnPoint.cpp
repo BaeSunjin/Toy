@@ -9,6 +9,11 @@ AUnitSpawnPoint::AUnitSpawnPoint()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = false;
+
+  root_component_ = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
+  root_component_->SetRelativeLocation(FVector(0, 0, 0));
+  SetRootComponent(root_component_);
+
   SetActorHiddenInGame(false);
 
 }
