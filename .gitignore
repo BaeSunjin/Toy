@@ -1,0 +1,11 @@
+.vs/
+Binaries/
+Build/
+Config/
+Content/
+Debug/
+DerivedDataCache/
+Intermediate/
+Saved/
+*.sln
+*uproject
