@@ -31,7 +31,7 @@ class TOY_API SquadMaker
 private:
 
   //생성 금지
-  SquadMaker();
+  SquadMaker() = delete;
 
 
 public:
