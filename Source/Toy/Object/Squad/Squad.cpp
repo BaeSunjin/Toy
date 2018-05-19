@@ -239,13 +239,11 @@ void ASquad::RearrangeSquad(const TArray<FVector>& goals)
     // 유닛의 위치 변경 필요 x
     if (near_unit_idx == goal_idx) { continue; }
 
-    // 유닛의 위치를 변경한다.
-    UE_LOG(LogTemp, Error, TEXT("Swap %d "), near_unit_idx);
+    // 유닛의 위치를 변경한다.    
     units_.Swap(goal_idx, near_unit_idx);
 
   }
 
-  UE_LOG(LogTemp, Error, TEXT("123213213            "));
 
 
   //유닛에 숫자부여

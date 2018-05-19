@@ -14,4 +14,6 @@ class TOY_API ADefaultUnitController : public AAIController
 {
   GENERATED_BODY()
 
+    ADefaultUnitController(const FObjectInitializer& ObjectInitializer);
+
 };

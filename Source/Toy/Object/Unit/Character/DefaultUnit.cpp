@@ -70,8 +70,8 @@ ADefaultUnit::ADefaultUnit()
 
   //--------- default value ------------
 
-  vertical_interval_ = 100.0f;
-  horizontal_interval_ = 100.0f;
+  vertical_interval_ = 200.0f;
+  horizontal_interval_ = 200.0f;
 
   //---- Helper UI
 
