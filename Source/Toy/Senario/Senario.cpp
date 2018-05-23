@@ -18,9 +18,6 @@ public:
 
   static void Load(const int& _stage, FSenarioData** _out_data) {
     
-   //static ConstructorHelpers::FObjectFinder<UDataTable>table_asset(
-   //                     TEXT("DataTable'/Game/Data/Senario/Senario.Senario'"));
-
     auto table_asset = LoadObject<UDataTable>(NULL,
       TEXT("DataTable'/Game/Data/Senario/Senario.Senario'"));
 
@@ -43,7 +40,6 @@ public:
 void Senario::GetSenarioData(const int& _stage,
                              TArray<FSquadUnitsInfo>& _out_info)
 {
-
 
   //시나리오 정보 로드 
   FSenarioData* out;
