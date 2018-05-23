@@ -18,7 +18,11 @@ class TOY_API AToyGameModeBase : public AGameModeBase
 
   bool first;
 
+  void MakeEnemy();
+
   virtual void StartPlay() override;
   virtual void Tick(float _delta) override;
+
+  
 
 };

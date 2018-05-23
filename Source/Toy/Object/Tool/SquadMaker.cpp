@@ -16,7 +16,7 @@ private:
 
 public:
 
-  static void CreateSquadUnit(const SquadUnitsInfo& _squad_units_info,
+  static void CreateSquadUnit(const FSquadUnitsInfo& _squad_units_info,
                               TArray<TWeakObjectPtr<ADefaultUnit>>& _out);
 
   //race : Á¾Á·
@@ -25,7 +25,7 @@ public:
 };
 
 
-void SquadUnitMaker::CreateSquadUnit(const SquadUnitsInfo& _squad_units_info,
+void SquadUnitMaker::CreateSquadUnit(const FSquadUnitsInfo& _squad_units_info,
                                     TArray<TWeakObjectPtr<ADefaultUnit>>& _out)
 {
 
@@ -68,18 +68,16 @@ bool SquadUnitMaker::ToGenerateClass(const EPlayerRace& _race, UClass*& _out)
 }
 
 
-SquadUnitsInfo::SquadUnitsInfo(const int& _unit_num,
+FSquadUnitsInfo::FSquadUnitsInfo(const int& _unit_num,
                                const EPlayerRace& _unit_type)
+  : unit_num_(_unit_num), unit_type_(_unit_type)
 {
 
   SJ_ASSERT(_unit_num);
 
-  unit_num_ = _unit_num;
-  unit_type_ = _unit_type;
-
 }
 
-bool SquadMaker::MakeSquad(const SquadUnitsInfo& _info,
+bool SquadMaker::MakeSquad(const FSquadUnitsInfo& _info,
                            const FVector& _spawn_pos,
                            const FVector2D& _squad_forward,
                            ASquad*& _out)

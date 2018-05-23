@@ -4,16 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "Rule/Rules.h"
 #include "UnitSpawnPoint.generated.h"
 
-//TODO 위치 변경?
-UENUM(Meta = (TeamFlag))
-enum class TeamFlag {
-
-  kRed,
-  kBlue
-
-};
 
 UCLASS()
 class TOY_API AUnitSpawnPoint : public AActor
