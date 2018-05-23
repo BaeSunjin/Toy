@@ -14,6 +14,10 @@ private:
 
   SenarioDataLoader() = delete;
 
+  SenarioDataLoader(const SenarioDataLoader& ) = delete;
+  SenarioDataLoader& operator = (const SenarioDataLoader& ) = delete;
+
+
 public:
 
   static void Load(const int& _stage, FSenarioData** _out_data) {

@@ -34,6 +34,8 @@ private:
   //생성 금지
   SquadMaker() = delete;
 
+  SquadMaker(const SquadMaker&) = delete;
+  SquadMaker& operator= (const SquadMaker&) = delete;
 
 public:
   

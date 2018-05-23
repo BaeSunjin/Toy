@@ -64,7 +64,7 @@ void AToyGameModeBase::MakeEnemy() {
       find_spawn_pos = true;
       break;
     }
-
+    
     SJ_ASSERT(find_spawn_pos);
 
     ASquad* squad = nullptr;

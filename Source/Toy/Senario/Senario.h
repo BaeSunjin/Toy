@@ -69,6 +69,9 @@ private:
 
 	Senario() = delete;
 
+  Senario(const Senario&) = delete;
+  Senario& operator = (const Senario&) = delete;
+
 public:
 
   static void GetSenarioData(const int& stage_,
