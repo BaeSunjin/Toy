@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Rule/Rules.h"
 #include "Object/Unit/Character/UnitTypesInfo.h"
 
 
@@ -29,6 +30,13 @@ class ASquad;
 class TOY_API SquadMaker
 {
 
+public:
+
+  static ASquad* MakeSquad(const FSquadUnitsInfo& _info,
+                           const TeamFlag& _team_flag);
+
+  
+
 private:
 
   //생성 금지
@@ -37,11 +45,7 @@ private:
   SquadMaker(const SquadMaker&) = delete;
   SquadMaker& operator= (const SquadMaker&) = delete;
 
-public:
-  
-  static bool MakeSquad(const FSquadUnitsInfo& _info,
-                        const FVector& _spawn_pos,
-                        const FVector2D& _squad_forward,
-                        ASquad*& _out);
+
+
 
 };

@@ -10,17 +10,19 @@ class ADefaultUnit;
 class ASquad;
 class UCameraComponent;
 
+//세부적으로 나눠야 한다.
+
 
 UENUM()
-enum class EControlState : uint8 {
+enum class EMousePossessState : uint8 {
 
 
   kUsedMagic = 0,
-  kHighLightUnit,
   kPossessedUnit,
   kNon
-
+  
 };
+
 
 // TODO 이름 변경 필요
 // 일단 캐릭터로 하고
@@ -84,28 +86,24 @@ public:
   float zoom_in_value_;
 
 
-
-
-
-
   // controled squad : (unit controll manager) 
   TWeakObjectPtr<ASquad> controlling_squad_;
 
 private:
 
-
   void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent);
-
 
 private:
 
-  
+  EMousePossessState control_state_;
 
-  EControlState control_state_;
-
+  UFUNCTION(BlueprintPure, Category = "PlayerController")
+  ASquad* GetSquad();
 
   // Input event recode
   bool is_rotation_;
+  
+  
 
   FVector2D mouse_pos_;
 
@@ -124,10 +122,13 @@ public:
   /** releas right mouse button */
   void ReleasMouseRight();
 
-  /** On Mouse Right Event at Unit Released state camera rotate */
+  void PressWhell();
+  void ReleasWhell();
+
+  /** On Mouse Wheel Event at Unit Released state camera rotate */
   void PressRotate();
 
-  /** Off Mouse Right Event at Unit Released state camera rotate */
+  /** Off Mouse Wheel Event at Unit Released state camera rotate */
   void ReleaseRotate();
 
   /** On Pocessed squad **/
@@ -164,7 +165,6 @@ public:
   * @param direcation - (1.0 for right, -1.0 for left)
   */
   void ZoomCameraInInput(float _dir);
-
 
 private:
 

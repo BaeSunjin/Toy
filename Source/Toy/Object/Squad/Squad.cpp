@@ -4,9 +4,14 @@
 #include "Common/PS_Utils.h"
 #include <limits>
 #include "Object/Unit/Character/DefaultUnit.h"
+#include "Runtime/Engine/Public/EngineUtils.h"
 #include "Runtime/Engine/Classes/Engine/World.h"
 
+
 #define REARRAGNE_DEGREE 0.7071f
+#define MIN_SQUAD_UNIT 7
+#define MoveAttackDistance 2
+#define WaitAttackDistnace 1
 
 // Sets default values
 ASquad::ASquad()
@@ -21,9 +26,14 @@ ASquad::ASquad()
   squad_forward_ = FVector2D(1, 0);
   squad_right_ = FVector2D(0, 1);
 
+  squad_behavior_state_ = FSquadBehaviorState::kWait;
+  retreat_ = false;
+  controlling_ = false;
+  
 }
 
-void ASquad::Init(const FVector& _pos, const FVector2D& _forward)
+void ASquad::Init(const FVector& _pos, const FVector2D& _forward,
+                  const TeamFlag& _team_flag)
 {
   SetActorLocation(_pos);
 
@@ -33,11 +43,11 @@ void ASquad::Init(const FVector& _pos, const FVector2D& _forward)
 
   InitUnitTransform();
 
+  team_flag_ = _team_flag;
 
 }
 
 void ASquad::InitUnitTransform() {
-
 
   SJ_ASSERT(units_.Num());
 
@@ -69,8 +79,7 @@ void ASquad::InitUnitTransform() {
 
 }
 
-void ASquad::MoveSquad(const FVector& _pos)
-{
+void ASquad::MoveSquad(const FVector& _pos){
 
   SJ_ASSERT(units_.Num());
 
@@ -97,7 +106,7 @@ void ASquad::MoveSquad(const FVector& _pos)
     RearrangeSquad(goals);
   }
 
-  UnitsMove(goals);
+  UnitsMove(goals, retreat_);
   SetActorLocation(_pos);
 
 }
@@ -114,7 +123,8 @@ void ASquad::SetHighLight(bool _light_on)
 }
 
 //유닛 하나하나에게 이동할 위치를 알려준다.
-void ASquad::UnitsMove(const TArray<FVector>& _goals)
+void ASquad::UnitsMove(const TArray<FVector>& _goals, 
+                        const bool& _retreat)
 {
  
   SJ_ASSERT(_goals.Num());
@@ -129,7 +139,8 @@ void ASquad::UnitsMove(const TArray<FVector>& _goals)
 
     SJ_ASSERT(units_[i].IsValid());
     auto unit = units_[i].Get();
-    unit->MoveTo(_goals[i], forward);
+    unit->MoveTo(_goals[i], forward, _retreat);
+    
   }
 }
 
@@ -257,6 +268,21 @@ void ASquad::RearrangeSquad(const TArray<FVector>& goals)
 
 }
 
+void ASquad::ClearSquad() {
+
+  for (auto& unit : units_) {
+    if (unit.IsValid()) {
+      //Behavior Tree will do - run away and destroy
+      unit.Get()->RunAway();
+      
+    }
+  }
+
+  //clear
+  units_.Empty();
+
+}
+
 // Called when the game starts or when spawned
 void ASquad::BeginPlay()
 {
@@ -269,6 +295,76 @@ void ASquad::Tick(float DeltaTime)
 {
   Super::Tick(DeltaTime);
 
+  if (units_.Num() < MIN_SQUAD_UNIT) {
+
+    //squad 제거
+    //player controller에 문제가 생길수도 있다.
+    ClearSquad();
+    Destroy();
+    return;
+  }
+
+  if (!controlling_) {
+    if (units_[0].IsValid()) {
+      if (units_[0].Get()->ExistMovePath()) {
+        SetRetreat(false);
+      }
+    }
+  }
+}
+
+void ASquad::SetAttackTargetToUnits(ASquad* _squad) {
+
+  SJ_ASSERT(_squad);
+
+  for (auto& unit : units_) {
+    if (unit.IsValid()) {
+      unit.Get()->SetAttackTarget(_squad);
+    }
+
+  }
+}
+
+void ASquad::SetControlling(bool _controlling) {
+  controlling_ = _controlling;
 }
 
 
+const TeamFlag& ASquad::GetTeamFlag() {
+  return team_flag_;
+}
+
+
+void ASquad::SetRetreat(const bool& _retreat) {
+  retreat_ = _retreat;
+}
+
+
+bool ASquad::GetRetreat() {
+  return retreat_;
+}
+
+void ASquad::RemoveUnit(ADefaultUnit* _unit) {
+
+  SJ_ASSERT(_unit);
+
+  bool find = false;
+  int count = units_.Num();
+  int array_idx;
+  for (array_idx = 0; array_idx < count; ++array_idx) {
+    if (units_[array_idx].IsValid()) {
+      auto unit = units_[array_idx].Get();
+      if (unit->GetUID() == _unit->GetUID()) {
+        find = true;
+        break;
+      }
+    }
+  }
+
+  //TODO :UID 생성되는 부분을 신가하게 반복되는 템플릿 패턴
+  // curiously recurring template pattern : CRTP 를 사용해 어디서든 사용가능하게 처리
+
+  if (find) {
+    units_.RemoveAt(array_idx);
+  }
+}

@@ -55,7 +55,7 @@ ATestCharacter::ATestCharacter(const FObjectInitializer& _objectInitializer)
   can_camera_move_ = true;
   is_rotation_ = false;
 
-  control_state_ = EControlState::kNon;
+  control_state_ = EMousePossessState::kNon;
 
   // intialize the camera
   //TODO 80글자 해결
@@ -72,8 +72,6 @@ void ATestCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInpu
 
   Super::SetupPlayerInputComponent(PlayerInputComponent);
 
-  // action mappings
-
   // mouse zoom
   PlayerInputComponent->BindAction("ZoomOutByWheel", IE_Pressed, this, &ATestCharacter::ZoomOutByWheel);
   PlayerInputComponent->BindAction("ZoomInByWheel", IE_Pressed, this, &ATestCharacter::ZoomInByWheel);
@@ -84,6 +82,9 @@ void ATestCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInpu
 
   PlayerInputComponent->BindAction("MouseLeft", IE_Pressed, this, &ATestCharacter::PressMouseLeft);
   PlayerInputComponent->BindAction("MouseLeft", IE_Released, this, &ATestCharacter::ReleasMouseLeft);
+
+  PlayerInputComponent->BindAction("Wheel", IE_Pressed, this, &ATestCharacter::PressWhell);
+  PlayerInputComponent->BindAction("Wheel", IE_Released, this, &ATestCharacter::ReleasWhell);
 
   // move Speed
   PlayerInputComponent->BindAction("FastMoveInput", IE_Pressed, this, &ATestCharacter::PressFastMoveInput);
@@ -128,6 +129,13 @@ void ATestCharacter::ZoomOutByWheel()
 
 }
 
+void ATestCharacter::PressWhell() {
+  PressRotate();
+}
+void ATestCharacter::ReleasWhell() {
+  ReleaseRotate();
+}
+
 
 void ATestCharacter::PressFastMoveInput()
 {
@@ -145,11 +153,8 @@ void ATestCharacter::ReleasFastMoveInput() {
 void ATestCharacter::PressMouseRight() {
 
   //TODO : 캐릭터의 움직임 처리?
-  if (control_state_ == EControlState::kPossessedUnit) {
+  if (control_state_ == EMousePossessState::kPossessedUnit) {
     MoveSquad();
-  }
-  else {
-    PressRotate();
   }
 
 }
@@ -157,12 +162,10 @@ void ATestCharacter::PressMouseRight() {
 void ATestCharacter::ReleasMouseRight() {
 
   //TODO : 캐릭터의 움직임 처리?
-  if (control_state_ == EControlState::kPossessedUnit) {
+  if (control_state_ == EMousePossessState::kPossessedUnit) {
 
   }
-  else {
-    ReleaseRotate();
-  }
+  
 
 }
 
@@ -214,8 +217,15 @@ void ATestCharacter::MoveSquad() {
     if (controlling_squad_.IsValid()) {
       controlling_squad_.Get()->MoveSquad(new_move_pos);
     }
-
   }
+}
+
+ASquad* ATestCharacter::GetSquad() {
+  if (controlling_squad_.IsValid()) {
+    return controlling_squad_.Get();
+  }
+
+  return nullptr;
 }
 
 bool ATestCharacter::GetSelectingUnit(ADefaultUnit*& _out) {
@@ -260,13 +270,16 @@ bool ATestCharacter::GetSelectingUnit(ADefaultUnit*& _out) {
 void ATestCharacter::SetNewSquad(const TWeakObjectPtr<ASquad>& _squad) {
 
   if (controlling_squad_ != nullptr) {
+    
     SJ_ASSERT(controlling_squad_.IsValid());
     controlling_squad_.Get()->SetHighLight(false);
+    controlling_squad_.Get()->SetControlling(false);
   }
 
   SJ_ASSERT(_squad.IsValid());
 
   controlling_squad_ = _squad;
+  controlling_squad_.Get()->SetControlling(true);
   SJ_ASSERT(controlling_squad_.IsValid());
 
   controlling_squad_.Get()->SetHighLight(true);
@@ -283,14 +296,11 @@ void ATestCharacter::PressMouseLeft()
 
   switch (control_state_)
   {
-  case EControlState::kUsedMagic:
-
-
+  case EMousePossessState::kUsedMagic:
 
     break;
-  case EControlState::kHighLightUnit:
-  case EControlState::kPossessedUnit:
-  case EControlState::kNon:
+  case EMousePossessState::kPossessedUnit:
+  case EMousePossessState::kNon:
   {
     //Get selected unit to mouse pointer
     ADefaultUnit* unit = nullptr;
@@ -298,6 +308,12 @@ void ATestCharacter::PressMouseLeft()
 
     if (controlling_squad_ != nullptr) {
       SJ_ASSERT(controlling_squad_.IsValid());
+    }
+
+    //유닛의 스쿼드가 없을떄 아무동작하지 않는다.
+    //부대가 사라졋을떄 유닛의 최소 유지 수가 없을떄
+    if (unit->GetSquad() == nullptr) {
+      return;
     }
 
     SJ_ASSERT(unit->GetSquad().IsValid());
@@ -309,8 +325,7 @@ void ATestCharacter::PressMouseLeft()
     if (CheckReselect(unit_squad)) { return; }
 
     SetNewSquad(unit->GetSquad());
-    control_state_ = EControlState::kPossessedUnit;
-
+    control_state_ = EMousePossessState::kPossessedUnit;
 
   }
   break;
@@ -534,6 +549,7 @@ float ATestCharacter::GetLandTerrainSurfaceAtCoord() const
 
   // ECC_ channels should be set properly !!!
   bool bhit = GetWorld()->LineTraceSingleByChannel(hit, start, end, ECollisionChannel::ECC_WorldStatic, trace_param);
+  
 
   if (bhit)
   {

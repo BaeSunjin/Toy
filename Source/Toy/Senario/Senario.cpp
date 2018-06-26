@@ -23,7 +23,7 @@ public:
   static void Load(const int& _stage, FSenarioData** _out_data) {
     
     auto table_asset = LoadObject<UDataTable>(NULL,
-      TEXT("DataTable'/Game/Data/Senario/Senario.Senario'"));
+      TEXT("DataTable'/Game/GameData/Senario/Senario.Senario'"));
 
     SJ_ASSERT(table_asset);
    
@@ -36,7 +36,7 @@ public:
 
     *_out_data = table_asset->FindRow<FSenarioData>(raw_name, context_string);
     SJ_ASSERT(_out_data);
-    
+  
   }
 };
 

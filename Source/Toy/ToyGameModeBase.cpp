@@ -9,8 +9,10 @@
 #include "Object/Unit/Character/UnitTypesInfo.h"
 #include "Object/Unit/Character/TestCharacter.h"
 #include "Player/Controller/ToyPlayerController.h"
+#include "Runtime/CoreUObject/Public/UObject/ConstructorHelpers.h"
 #include "Runtime/Engine/Classes/Engine/World.h"
 #include "Runtime/Engine/Classes/GameFramework/Actor.h"
+#include "Runtime/Engine/Classes/GameFramework/HUD.h"
 #include "Runtime/Engine/Public/EngineUtils.h"
 #include "Senario/Senario.h"
 
@@ -27,14 +29,17 @@ AToyGameModeBase::AToyGameModeBase(const FObjectInitializer& _objectInitializer)
   PrimaryActorTick.bCanEverTick = true;
   first = true;
 
+  // TODO : 마우스 컨트롤 수정중
+  /*static ConstructorHelpers::FObjectFinder<UBlueprint> hud(TEXT("WidgetBlueprint'/Game/UI/HUD/InGameUI.InGameUI'"));
+  if (hud.Succeeded()) {
+    HUDClass = hud.Object->GeneratedClass;
+  }*/
+  
 }
 
 void AToyGameModeBase::StartPlay()
 {
-
   Super::StartPlay();
-
-
 
 }
 
@@ -67,9 +72,10 @@ void AToyGameModeBase::MakeEnemy() {
     
     SJ_ASSERT(find_spawn_pos);
 
-    ASquad* squad = nullptr;
-    SJ_ASSERT(SquadMaker::MakeSquad(test_units_info, spawn_pos,
-      FVector2D(1.0f, 0.0f), squad));
+    ASquad* squad = SquadMaker::MakeSquad(test_units_info, team_flag);
+    SJ_ASSERT(squad);
+
+    squad->Init(spawn_pos, FVector2D(1.0f, 0.0f), team_flag);
 
     //생성확인.
     SJ_ASSERT(squad);
@@ -82,6 +88,7 @@ void AToyGameModeBase::MakeEnemy() {
 
 void AToyGameModeBase::Tick(float _delt) {
 
+  
   if (first == false) return;
 
   int unit_num = 10;
@@ -107,9 +114,10 @@ void AToyGameModeBase::Tick(float _delt) {
 
   SJ_ASSERT(find_spawn_pos);
 
-  ASquad* squad = nullptr;
-  SJ_ASSERT(SquadMaker::MakeSquad(test_units_info, spawn_pos,
-    FVector2D(1.0f, 0.0f), squad));
+  ASquad* squad = SquadMaker::MakeSquad(test_units_info, team_flag);
+  SJ_ASSERT(squad);
+
+  squad->Init(spawn_pos, FVector2D(1.0f, 0.0f), team_flag);
 
   //생성확인.
   SJ_ASSERT(squad);
