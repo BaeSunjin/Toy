@@ -57,7 +57,10 @@ void UBTTask_RunAway::OnTaskFinished(UBehaviorTreeComponent& _onwer_component,
                                   GetValueAsObject("SelfActor"));
 
   _onwer_component.StopTree();
-  owner->Destroy();
+
+  if (owner) {
+    owner->Destroy();
+  }
   
 }
 

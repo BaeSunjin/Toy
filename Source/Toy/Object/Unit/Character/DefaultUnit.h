@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Common/SerialNum.h"
 #include "GameFramework/Character.h"
 #include "Object/Tool/SquadMaker.h"
 #include "Runtime/Core/Public/Containers/Map.h"
@@ -38,7 +39,7 @@ public:
 };
 
 UCLASS()
-class TOY_API ADefaultUnit : public ACharacter
+class TOY_API ADefaultUnit : public ACharacter, public SerialNum<ADefaultUnit>
 {
   GENERATED_BODY()
 
@@ -99,15 +100,10 @@ public:
   virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
   virtual void BeginDestroy() override;
 
-  int GetUID();
 protected:
   // Called when the game starts or when spawned
   virtual void BeginPlay() override;
 
-private:
-  //TODO : 다른 클래스로 타입을 변경해야한다
-  // 헤깔리지 않게 
-  int GenerateUID();
 
 private:
 
@@ -166,9 +162,6 @@ private:
   AAIController* controller_;
 
   float attack_update_delta_time_;
-
-
-  int uid_;
 
 public:
 

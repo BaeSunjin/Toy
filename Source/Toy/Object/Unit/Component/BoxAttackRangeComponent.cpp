@@ -175,15 +175,13 @@ void UBoxAttackRangeComponent::EndOverlapCallBack(
   for (array_idx = 0; array_idx < count; ++array_idx) {
     if (targets_[array_idx].IsValid()) {
       auto target = targets_[array_idx].Get();
-      if (target->GetUID() == other_actor->GetUID()) {
+      if (target->GetSerialNum() == other_actor->GetSerialNum()) {
         find = true;
         break;
       }
     }
   }
 
-  //TODO :UID 생성되는 부분을 신가하게 반복되는 템플릿 패턴
-  // curiously recurring template pattern : CRTP 를 사용해 어디서든 사용가능하게 처리
 
   if (find) {
     targets_.RemoveAt(array_idx);
@@ -209,7 +207,7 @@ bool UBoxAttackRangeComponent::HasAlreadyAdded(ADefaultUnit* _actor) {
 
   for (auto& target : targets_) {
     if (target.IsValid()) {
-      if (target.Get()->GetUID() == _actor->GetUID()) {
+      if (target.Get()->GetSerialNum() == _actor->GetSerialNum()) {
         UE_LOG(LogTemp, Error,
           TEXT("%s Overlap again"), *_actor->GetName());
         return true;

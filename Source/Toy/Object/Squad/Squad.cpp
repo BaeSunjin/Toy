@@ -354,15 +354,12 @@ void ASquad::RemoveUnit(ADefaultUnit* _unit) {
   for (array_idx = 0; array_idx < count; ++array_idx) {
     if (units_[array_idx].IsValid()) {
       auto unit = units_[array_idx].Get();
-      if (unit->GetUID() == _unit->GetUID()) {
+      if (unit->GetSerialNum() == _unit->GetSerialNum()) {
         find = true;
         break;
       }
     }
   }
-
-  //TODO :UID 생성되는 부분을 신가하게 반복되는 템플릿 패턴
-  // curiously recurring template pattern : CRTP 를 사용해 어디서든 사용가능하게 처리
 
   if (find) {
     units_.RemoveAt(array_idx);

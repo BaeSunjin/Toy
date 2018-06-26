@@ -71,7 +71,7 @@ ADefaultUnit::ADefaultUnit()
   
   exist_attack_taget_ = false;
 
-  uid_ = GenerateUID();
+
 
 }
 
@@ -334,8 +334,6 @@ void ADefaultUnit::Tick(float _delta_time)
   attack_update_delta_time_ += _delta_time;
   if (attack_update_delta_time_ > ATTACK_TARGET_UPDATE_TIME) {
 
-
-    //TODO : 코드확인필요
     GetAttackTarget();
     attack_update_delta_time_ = 0;
   }
@@ -385,19 +383,3 @@ ADefaultUnit* ADefaultUnit::GetAttackTarget() {
   return target;
 }
 
-int ADefaultUnit::GetUID() {
-  
-  return uid_;
-}
-
-int ADefaultUnit::GenerateUID() {
-
-  static int pre_uid_;
-  pre_uid_++;
-  if (pre_uid_ == TNumericLimits< int32 >::Max()) {
-    pre_uid_ = 0;
-  }
-
-  return pre_uid_;
-
-}

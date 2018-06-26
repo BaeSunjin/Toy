@@ -29,12 +29,6 @@ AToyGameModeBase::AToyGameModeBase(const FObjectInitializer& _objectInitializer)
   PrimaryActorTick.bCanEverTick = true;
   first = true;
 
-  // TODO : 마우스 컨트롤 수정중
-  /*static ConstructorHelpers::FObjectFinder<UBlueprint> hud(TEXT("WidgetBlueprint'/Game/UI/HUD/InGameUI.InGameUI'"));
-  if (hud.Succeeded()) {
-    HUDClass = hud.Object->GeneratedClass;
-  }*/
-  
 }
 
 void AToyGameModeBase::StartPlay()
@@ -48,7 +42,7 @@ void AToyGameModeBase::MakeEnemy() {
   TArray<FSquadUnitsInfo> enemy_squad_units_info;
   Senario::GetSenarioData(0, enemy_squad_units_info);
 
-  //TODO enemy_infos로 적군을 생성해준다.
+  //Enemy info 로 적군생성
   for (auto squad_unit : enemy_squad_units_info) {
 
     int unit_num = squad_unit.unit_num_;
