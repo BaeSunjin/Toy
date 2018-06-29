@@ -18,6 +18,7 @@ class UCapsuleComponent;
 class IAttackRangeInterface;
 class UDefaultWeaponComponent;
 
+
 USTRUCT(BlueprintType)
 struct FUnitState {
 
@@ -43,130 +44,143 @@ class TOY_API ADefaultUnit : public ACharacter, public SerialNum<ADefaultUnit>
 {
   GENERATED_BODY()
 
-public:
-  // Sets default values for this character's properties
-  ADefaultUnit();
+ public:
+   // Sets default values for this character's properties
+   ADefaultUnit();
 
+   // call all init function
+   void Init(UDefaultWeaponComponent* _weapon,
+             IAttackRangeInterface* _attack_range);
 
-  const TWeakObjectPtr<ASquad>& GetSquad();
+   const TWeakObjectPtr<ASquad>& GetSquad();
+   float GetHirzontalInterval();
+   float GetVerticalInterval();
+   ADefaultUnit* GetAttackTarget();
+   TeamFlag GetTeamFlag();
+   bool ExistMovePath();
+   
+   UFUNCTION(BlueprintPure, Category = "AttackTarget")
+   bool IsExistAttackTarget();
 
-  void RunAway();
-  void SetHighLight(bool _light_on);
-  void SetAttackTarget(ASquad* _target);
-  float GetHirzontalInterval();
-  float GetVerticalInterval();
+   void SetHighLight(bool _light_on);
+   void SetAttackTarget(ASquad* _target);
+   void SetAttackRange(float _attack_range);
+   
 
-  //override를 사용해서
-  //자식 Unit마다 다른 정보들을 로드해서 사용한다.
-  virtual void InitHLMesh();
-  virtual void InitMesh();
-  virtual void InitWeapon();
-  virtual void InitController();
-  virtual void InitAnimBlueprint();
-  virtual void InitInterval();
-  virtual void InitBehaviorTree();
-  virtual void InitState();
-  virtual void InitAttackRangeComponent();
+   void RunAway();
+   void OnDamage(int _damega);
+   void MoveTo(const FVector& _move_pos,
+               const FVector& _normal_look_at,
+               const bool& _retreat);
 
-  void WorkAttackComponent();
+   // Called every frame
+   virtual void Tick(float _delta_time) override;
 
-  void OnDamage(int _damega);
-  bool ExistMovePath();
+   //TODO 추가.. 뭔가 필요..;; 게임 시작 시점에서 콜을 해주어야함.
+   void WorkAttackComponent();
+   
+   UFUNCTION(BlueprintCallable, Category = "AttackTarget")
+   void Attack();
 
-  ADefaultUnit* GetAttackTarget();
-
-  UFUNCTION(BlueprintCallable, Category = "AttackTarget")
-  void Attack();
-
-  UFUNCTION(BlueprintPure, Category = "AttackTarget")
-  bool IsExistAttackTarget();
+   UFUNCTION(BlueprintCallable, Category = "AttackTarget")
+   void LookAt();
 
   
-  TeamFlag GetTeamFlag();
+
   
+  
+  
+ protected:
+   // Called when the game starts or when spawned
+   virtual void BeginPlay() override;
+
+
+ private:
+
 
 #if WITH_EDITOR
-  virtual void HelperUIInit();
+   virtual void HelperUIInit();
 #endif
 
-  virtual void MoveTo(const FVector& _move_pos,
-                      const FVector& _normal_look_at,
-                      const bool& _retreat);
+   void InitCollision();
+   void InitHLMesh();
+   void InitMesh();
+   void InitController();
+   void InitAnimBlueprint();
+   void InitBehaviorTree();
+   void InitState();
+   void InitInterval(float _vertical, float _horizontal);
+   void SetAttackRangeComponent(IAttackRangeInterface* _new_attack_range,
+                                float _attack_range);
 
-  // Called every frame
-  virtual void Tick(float _delta_time) override;
+   void SetWeapon(UDefaultWeaponComponent* _new_weapon,
+                  USkeletalMeshComponent* _mesh,
+                  FString _socket_name);
 
-  // Called to bind functionality to input
-  virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-  virtual void BeginDestroy() override;
-
-protected:
-  // Called when the game starts or when spawned
-  virtual void BeginPlay() override;
-
-
-private:
-
-  //SquadMaker에서만 사용을 한다.
-  friend class SquadUnitMaker;
-  void SetSquad(const TWeakObjectPtr<ASquad>& data);
-  void SetTeamFlag(const TeamFlag& _team_flag);
-
-  //ADefaultUnitController 에서만 접근 허용
-  friend class ADefaultUnitController;
-  UPROPERTY(EditAnywhere, Category = Behavior)
-  UBehaviorTree* behavior_;
-
-  UBlackboardData* GetUnitBlackBoardData();
-  UBehaviorTree* GetUnitBehavior();
-
-private:
-
-  UPROPERTY(EditAnywhere, Category = HighLight)
-    UStaticMeshComponent* high_light_component_;
+   //SquadMaker에서만 사용을 한다.
+   friend class SquadUnitMaker;
+   void SetSquad(const TWeakObjectPtr<ASquad>& data);
+   void SetTeamFlag(const TeamFlag& _team_flag);
 
 
-  UPROPERTY(VisibleDefaultsOnly, Category = Mesh)
-    USkeletalMeshComponent* unit_mesh_;
+   //ADefaultUnitController 에서만 접근 허용
+   friend class ADefaultUnitController;
+   UPROPERTY(EditAnywhere, Category = Behavior)
+   UBehaviorTree* behavior_;
+   UBlackboardData* GetUnitBlackBoardData();
+   UBehaviorTree* GetUnitBehavior();
 
-  UPROPERTY(VisibleDefaultsOnly, Category = Mesh)
-    UDefaultWeaponComponent* weapon_component_;
-
-  UPROPERTY(VisibleDefaultsOnly, Category = AttackRange)
-    TScriptInterface<IAttackRangeInterface> attack_range_component_;
-
-  UPROPERTY(VisibleAnywhere, Category = Team)
-    TeamFlag team_flag_;
-
-  bool exist_attack_taget_;
-
-  // 임시 디버깅 심볼
-  mutable FVector log_pos_;
+   UPROPERTY(EditAnywhere, Category = HighLight)
+   UStaticMeshComponent* high_light_component_;
 
 
-  TWeakObjectPtr<ASquad> squad_;
+   UPROPERTY(VisibleDefaultsOnly, Category = Mesh)
+   USkeletalMeshComponent* unit_mesh_;
+
+   UPROPERTY(VisibleDefaultsOnly, Category = Mesh)
+   UDefaultWeaponComponent* weapon_component_;
+
+   UPROPERTY(VisibleDefaultsOnly, Category = AttackRange)
+   TScriptInterface<IAttackRangeInterface> attack_range_component_;
+
+   UPROPERTY(VisibleAnywhere, Category = Team)
+   TeamFlag team_flag_;
+
+   bool exist_attack_taget_;
+
+   // 임시 디버깅 심볼
+   mutable FVector log_pos_;
 
 
-  UPROPERTY(VisibleDefaultsOnly, Category = Test)
-    UClass* test_billbard_generateed_class_;
+   TWeakObjectPtr<ASquad> squad_;
 
-  UPROPERTY(EditAnywhere, Category = Test)
-    class AActor* test_billboard_;
 
-  FUnitState state_;
-  float attack_range_;
+   UPROPERTY(VisibleDefaultsOnly, Category = Test)
+   UClass* test_billbard_generateed_class_;
 
-  // soldier 
-  float vertical_interval_;
-  float horizontal_interval_;
-  AAIController* controller_;
+   UPROPERTY(EditAnywhere, Category = Test)
+   class AActor* test_billboard_;
 
-  float attack_update_delta_time_;
+   FUnitState state_;
+   float attack_range_;
 
-public:
+   // soldier 
+   float vertical_interval_;
+   float horizontal_interval_;
+   AAIController* controller_;
 
-  //squad soldier idx number
-  UPROPERTY(BlueprintReadOnly, Category = Test)
-    int soldier_num_;
+   float attack_update_delta_time_;
+
+ public:
+
+   //squad soldier idx number
+   UPROPERTY(BlueprintReadOnly, Category = Test)
+   int soldier_num_;
+
+   FString static_mesh_file_path_;
+   FString animation_blueprint_file_path_;
+   FString behavior_tree_file_path_;
+   FString weapon_socket_name_;
 
 };
+

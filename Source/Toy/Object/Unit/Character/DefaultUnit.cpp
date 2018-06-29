@@ -2,11 +2,12 @@
 
 #include "DefaultUnit.h"
 #include "Common/PS_Utils.h"
+#include "DrawDebugHelpers.h"
 #include "Object/Squad/Squad.h"
 #include "Object/Unit/Controller/DefaultUnitController.h"
-#include "Object/Unit/Component/AttackRangeInterface.h"
-#include "Object/Unit/Component/BoxAttackRangeComponent.h"
-#include "Object/Weapon/DefaultWeaponComponent.h"
+#include "Object/Unit/Component/AttackRange/AttackRangeInterface.h"
+#include "Object/Unit/Component/AttackRange/BoxAttackRangeComponent.h"
+#include "Object/Unit/Component/Weapon/DefaultWeaponComponent.h"
 #include "Runtime/AIModule/Classes/AIController.h"
 #include "Runtime/AIModule/Classes/BehaviorTree/BehaviorTree.h"
 #include "Runtime/AIModule/Classes/Navigation/PathFollowingComponent.h"
@@ -18,7 +19,7 @@
 #include "Runtime/Engine/Classes/Components/SkeletalMeshComponent.h"
 #include "Runtime/Engine/Classes/Components/CapsuleComponent.h"
 #include "Runtime/Engine/Classes/GameFramework/Actor.h"
-#include "DrawDebugHelpers.h"
+
 
 const static float ATTACK_TARGET_UPDATE_TIME = 1.0f;
 
@@ -28,15 +29,35 @@ ADefaultUnit::ADefaultUnit()
   // Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
   PrimaryActorTick.bCanEverTick = true;
 
+  // init data setting
+  static_mesh_file_path_ = "SkeletalMesh'/Game/Characters/Animations/TwoHandedSword_AnimsetPro/UE4_Mannequin/Mesh/SK_Mannequin.SK_Mannequin'";
+  animation_blueprint_file_path_ = "AnimBlueprint'/Game/Characters/Animations/TwoHandedSword_AnimsetPro/Animations/AnimBlueprint/2hand_sward_warrior.2hand_sward_warrior'";
+  behavior_tree_file_path_ = "BehaviorTree'/Game/Characters/AI/DefulatUnit_BT.DefulatUnit_BT'";
+  weapon_socket_name_ = "LeftHandSocket";
+  AIControllerClass = ADefaultUnitController::StaticClass();
+  SetAttackRange(125.0f);
+
+  auto weapon_instnace =
+    CreateDefaultSubobject<UDefaultWeaponComponent>(TEXT("Weapon_Component"));
+
+  auto attack_range = CreateDefaultSubobject<UBoxAttackRangeComponent>(
+    TEXT("AttackRangeComponent"));
+
+  Init(weapon_instnace, attack_range);
+
+
+  
+}
+
+void ADefaultUnit::Init(UDefaultWeaponComponent* _weapon,
+                        IAttackRangeInterface* _attack_range)
+{
+
+  SJ_ASSERT(_weapon);
+  SJ_ASSERT(_attack_range);
+
   // ------------colision init --------------
-  FCollisionResponseContainer collision_response;
-  collision_response.SetResponse(ECollisionChannel::ECC_WorldStatic, ECollisionResponse::ECR_Block);
-  collision_response.SetResponse(ECollisionChannel::ECC_WorldDynamic, ECollisionResponse::ECR_Block);
-  collision_response.SetResponse(ECollisionChannel::ECC_MouseRay, ECollisionResponse::ECR_Block);
-  collision_response.SetResponse(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Overlap);
-
-
-  GetCapsuleComponent()->SetCollisionResponseToChannels(collision_response);
+  InitCollision();
 
   // ---- heigh light mesh init ----
   InitHLMesh();
@@ -44,34 +65,30 @@ ADefaultUnit::ADefaultUnit()
   //---- mesh init ----
   InitMesh();
 
-  //---- weapone init ----
-  InitWeapon();
-
   //---- controller init ----
+
   InitController();
 
   //---- animation init ----
   InitAnimBlueprint();
 
   //---- units interval init ----
-  InitInterval();
+  InitInterval(200.0f, 200.0f);
 
   //---- behavior tree init ----
   InitBehaviorTree();
 
   //---- attack range component init ----
-  InitAttackRangeComponent();
- 
+  SetAttackRangeComponent(_attack_range, attack_range_);
+
+  //---- weapone init ----
+  SetWeapon(_weapon, unit_mesh_, weapon_socket_name_);
+
 #if WITH_EDITOR
   //---- Helper UI init ----
   HelperUIInit();
 
 #endif
-
-  
-  exist_attack_taget_ = false;
-
-
 
 }
 
@@ -89,12 +106,7 @@ void ADefaultUnit::BeginPlay()
 
 }
 
-void ADefaultUnit::BeginDestroy() {
 
-  Super::BeginDestroy();
-  
-
-}
 
 void ADefaultUnit::RunAway() {
 
@@ -155,6 +167,18 @@ float ADefaultUnit::GetVerticalInterval() {
   return vertical_interval_;
 }
 
+void ADefaultUnit::InitCollision() {
+
+  FCollisionResponseContainer collision_response;
+  collision_response.SetResponse(ECollisionChannel::ECC_WorldStatic, ECollisionResponse::ECR_Block);
+  collision_response.SetResponse(ECollisionChannel::ECC_WorldDynamic, ECollisionResponse::ECR_Block);
+  collision_response.SetResponse(ECollisionChannel::ECC_MouseRay, ECollisionResponse::ECR_Block);
+  collision_response.SetResponse(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Overlap);
+
+  GetCapsuleComponent()->SetCollisionResponseToChannels(collision_response);
+
+}
+
 void ADefaultUnit::InitHLMesh() {
 
   high_light_component_ = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("HighLight_Mesh"));
@@ -180,8 +204,17 @@ void ADefaultUnit::InitHLMesh() {
 }
 
 void ADefaultUnit::InitMesh() {
+  
+  if (static_mesh_file_path_.Len() == 0) {
 
-  static ConstructorHelpers::FObjectFinder<USkeletalMesh> unit_mesh(TEXT("SkeletalMesh'/Game/Characters/Animations/TwoHandedSword_AnimsetPro/UE4_Mannequin/Mesh/SK_Mannequin.SK_Mannequin'"));
+    UE_LOG(LogTemp, Error,
+      TEXT("%s initfaile not setting static mesh file path"), *GetName());
+    SJ_ASSERT(false);
+  }
+
+  static ConstructorHelpers::FObjectFinder<USkeletalMesh> 
+    unit_mesh(*static_mesh_file_path_);
+
   SJ_ASSERT(unit_mesh.Object);
 
   unit_mesh_ = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Unit_Mesh"));
@@ -191,23 +224,37 @@ void ADefaultUnit::InitMesh() {
   unit_mesh_->RelativeRotation = FRotator(0.0f, -90.0f, 0.0f);
   unit_mesh_->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
-  
-
 }
 
-void ADefaultUnit::InitWeapon() {
+void ADefaultUnit::SetWeapon(UDefaultWeaponComponent* _new_weapon,
+                              USkeletalMeshComponent* _mesh,
+                              FString _socket_name) {
 
-  SJ_ASSERT(unit_mesh_);
+  SJ_ASSERT(_mesh);
+  SJ_ASSERT(_new_weapon);
+  if (_socket_name.Len() == 0) {
   
-  weapon_component_ = CreateDefaultSubobject<UDefaultWeaponComponent>(TEXT("Weapon_Component"));
-  weapon_component_->Attach( unit_mesh_ , "LeftHandSocket");
+    UE_LOG(LogTemp, Error,
+      TEXT("%s initfaile not setting weapon socket name"), *GetName());
+    SJ_ASSERT(false);
 
+  }
+  
+  weapon_component_ = _new_weapon;
+  weapon_component_->Attach(_mesh, *_socket_name);
 
 }
 
 void ADefaultUnit::InitController() {
 
-  AIControllerClass = ADefaultUnitController::StaticClass();
+  if (AIControllerClass == nullptr) {
+
+    UE_LOG(LogTemp, Error,
+      TEXT("%s initfaile not setting AIController class"), *GetName());
+
+    SJ_ASSERT(false);
+  }
+  
   AutoPossessAI = EAutoPossessAI::Spawned;
 
 }
@@ -215,23 +262,45 @@ void ADefaultUnit::InitController() {
 void ADefaultUnit::InitAnimBlueprint() {
 
   SJ_ASSERT(unit_mesh_);
-  static ConstructorHelpers::FObjectFinder<UAnimBlueprint> anim_blueprint(TEXT("AnimBlueprint'/Game/Characters/Animations/TwoHandedSword_AnimsetPro/Animations/AnimBlueprint/2hand_sward_warrior.2hand_sward_warrior'"));
-  SJ_ASSERT(anim_blueprint.Object);
 
+  if (animation_blueprint_file_path_.Len() == 0) {
+
+    UE_LOG(LogTemp, Error,
+      TEXT("%s initfaile not setting animation blueprint file path"),
+      *GetName());
+
+    SJ_ASSERT(false);
+  }
+
+
+  static ConstructorHelpers::FObjectFinder<UAnimBlueprint> 
+    anim_blueprint(*animation_blueprint_file_path_);
+
+  SJ_ASSERT(anim_blueprint.Object);
   unit_mesh_->SetAnimInstanceClass(anim_blueprint.Object->GeneratedClass);
 
 }
 
-void ADefaultUnit::InitInterval() {
+void ADefaultUnit::InitInterval(float _vertical, float _horizontal) {
 
-  vertical_interval_ = 200.0f;
-  horizontal_interval_ = 200.0f;
+  vertical_interval_ = _vertical;
+  horizontal_interval_ = _horizontal;
 
 }
 
 void ADefaultUnit::InitBehaviorTree() {
 
-  static ConstructorHelpers::FObjectFinder<UBehaviorTree> behavior_tree(TEXT("BehaviorTree'/Game/Characters/AI/DefulatUnit_BT.DefulatUnit_BT'"));
+  if (behavior_tree_file_path_.Len() == 0) {
+
+    UE_LOG(LogTemp, Error,
+      TEXT("%s initfaile not setting behavior tree file path"), *GetName());
+
+    SJ_ASSERT(false);
+  }
+
+  static ConstructorHelpers::FObjectFinder<UBehaviorTree>
+    behavior_tree(*behavior_tree_file_path_);
+
   if (behavior_tree.Succeeded()) {
     behavior_ = behavior_tree.Object;
   }
@@ -247,20 +316,29 @@ void ADefaultUnit::InitState() {
   state_.hp_.Key = 100;
   state_.hp_.Value = true;
 
-  //move to 는 다른곳에서 넣어주어야 한다.
 }
 
-void ADefaultUnit::InitAttackRangeComponent(){
+void ADefaultUnit::SetAttackRangeComponent(IAttackRangeInterface* _new_attack_range,
+                                           float _attack_range)
+{
 
-  attack_range_component_ = CreateDefaultSubobject<UBoxAttackRangeComponent>(
-    TEXT("AttackRangeComponent"));
+  SJ_ASSERT(_new_attack_range);
 
+  if (attack_range_ <= 0) {
+
+    UE_LOG(LogTemp, Error,
+      TEXT("%s initfaile not setting attack_range_"), *GetName());
+
+    SJ_ASSERT(false); 
+
+  }
+  
+  attack_range_component_ = _new_attack_range->_getUObject();
   attack_range_component_->Attach(RootComponent);
   
 
-  attack_range_ = 125.0f;
+  attack_range_ = _attack_range;
   attack_range_component_->SetAttackRange(attack_range_);
-
 
 }
 
@@ -336,14 +414,8 @@ void ADefaultUnit::Tick(float _delta_time)
 
     GetAttackTarget();
     attack_update_delta_time_ = 0;
+
   }
-
-}
-
-// Called to bind functionality to input
-void ADefaultUnit::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
-{
-  Super::SetupPlayerInputComponent(PlayerInputComponent);
 
 }
 
@@ -357,12 +429,29 @@ bool ADefaultUnit::ExistMovePath() {
 
 }
 
+
+
 void ADefaultUnit::Attack() {
 
   auto target = GetAttackTarget();
   if (target == nullptr) { return; }
 
   weapon_component_->AttackTarget(target);
+
+}
+
+//공격 애니메이션이 실행될떄 바로 적을 처다본다.
+void ADefaultUnit::LookAt() {
+
+  auto target = GetAttackTarget();
+  if (target == nullptr) { return; }
+
+  if (target) {
+    auto dir = target->GetActorLocation() - GetActorLocation();
+    FRotator lookAtRotator = FRotationMatrix::MakeFromX(dir).Rotator();
+    SetActorRotation(lookAtRotator);
+  }
+
 }
 
 bool ADefaultUnit::IsExistAttackTarget() {
@@ -383,3 +472,7 @@ ADefaultUnit* ADefaultUnit::GetAttackTarget() {
   return target;
 }
 
+
+void ADefaultUnit::SetAttackRange(float _attack_range) {
+  attack_range_ = _attack_range;
+}
