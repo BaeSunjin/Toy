@@ -16,7 +16,7 @@ class UBlackboardData;
 class UBehaviorTree;
 class UCapsuleComponent;
 class IAttackRangeInterface;
-class UDefaultWeaponComponent;
+class UWeaponComponentBase;
 
 
 USTRUCT(BlueprintType)
@@ -49,7 +49,7 @@ class TOY_API ADefaultUnit : public ACharacter, public SerialNum<ADefaultUnit>
    ADefaultUnit();
 
    // call all init function
-   void Init(UDefaultWeaponComponent* _weapon,
+   void Init(UWeaponComponentBase* _weapon,
              IAttackRangeInterface* _attack_range);
 
    const TWeakObjectPtr<ASquad>& GetSquad();
@@ -113,7 +113,7 @@ class TOY_API ADefaultUnit : public ACharacter, public SerialNum<ADefaultUnit>
    void SetAttackRangeComponent(IAttackRangeInterface* _new_attack_range,
                                 float _attack_range);
 
-   void SetWeapon(UDefaultWeaponComponent* _new_weapon,
+   void SetWeapon(UWeaponComponentBase* _new_weapon,
                   USkeletalMeshComponent* _mesh,
                   FString _socket_name);
 
@@ -138,7 +138,7 @@ class TOY_API ADefaultUnit : public ACharacter, public SerialNum<ADefaultUnit>
    USkeletalMeshComponent* unit_mesh_;
 
    UPROPERTY(VisibleDefaultsOnly, Category = Mesh)
-   UDefaultWeaponComponent* weapon_component_;
+   UWeaponComponentBase* weapon_component_;
 
    UPROPERTY(VisibleDefaultsOnly, Category = AttackRange)
    TScriptInterface<IAttackRangeInterface> attack_range_component_;

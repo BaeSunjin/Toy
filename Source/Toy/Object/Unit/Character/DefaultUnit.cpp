@@ -7,7 +7,7 @@
 #include "Object/Unit/Controller/DefaultUnitController.h"
 #include "Object/Unit/Component/AttackRange/AttackRangeInterface.h"
 #include "Object/Unit/Component/AttackRange/BoxAttackRangeComponent.h"
-#include "Object/Unit/Component/Weapon/DefaultWeaponComponent.h"
+#include "Object/Unit/COmponent/Weapon/TwoHandedAxComponent.h"
 #include "Runtime/AIModule/Classes/AIController.h"
 #include "Runtime/AIModule/Classes/BehaviorTree/BehaviorTree.h"
 #include "Runtime/AIModule/Classes/Navigation/PathFollowingComponent.h"
@@ -38,7 +38,7 @@ ADefaultUnit::ADefaultUnit()
   SetAttackRange(125.0f);
 
   auto weapon_instnace =
-    CreateDefaultSubobject<UDefaultWeaponComponent>(TEXT("Weapon_Component"));
+    CreateDefaultSubobject<UTwoHandedAxComponent>(TEXT("Weapon_Component"));
 
   auto attack_range = CreateDefaultSubobject<UBoxAttackRangeComponent>(
     TEXT("AttackRangeComponent"));
@@ -49,7 +49,7 @@ ADefaultUnit::ADefaultUnit()
   
 }
 
-void ADefaultUnit::Init(UDefaultWeaponComponent* _weapon,
+void ADefaultUnit::Init(UWeaponComponentBase* _weapon,
                         IAttackRangeInterface* _attack_range)
 {
 
@@ -226,7 +226,7 @@ void ADefaultUnit::InitMesh() {
 
 }
 
-void ADefaultUnit::SetWeapon(UDefaultWeaponComponent* _new_weapon,
+void ADefaultUnit::SetWeapon(UWeaponComponentBase* _new_weapon,
                               USkeletalMeshComponent* _mesh,
                               FString _socket_name) {
 
@@ -241,7 +241,7 @@ void ADefaultUnit::SetWeapon(UDefaultWeaponComponent* _new_weapon,
   }
   
   weapon_component_ = _new_weapon;
-  weapon_component_->Attach(_mesh, *_socket_name);
+  weapon_component_->AttachTo(_mesh, *_socket_name);
 
 }
 
@@ -436,7 +436,7 @@ void ADefaultUnit::Attack() {
   auto target = GetAttackTarget();
   if (target == nullptr) { return; }
 
-  weapon_component_->AttackTarget(target);
+  weapon_component_->Attack(target);
 
 }
 
