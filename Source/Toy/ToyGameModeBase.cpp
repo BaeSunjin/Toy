@@ -5,7 +5,7 @@
 #include "Object/Squad/Squad.h"
 #include "Object/Tool/SquadMaker.h"
 #include "Object/Tool/UnitSpawnPoint.h"
-#include "Object/Unit/Character/DefaultUnit.h"
+#include "Object/Unit/Character/UnitBase.h"
 #include "Object/Unit/Character/UnitTypesInfo.h"
 #include "Object/Unit/Character/TestCharacter.h"
 #include "Player/Controller/ToyPlayerController.h"

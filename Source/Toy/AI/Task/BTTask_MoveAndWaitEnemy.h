@@ -6,10 +6,11 @@
 #include "BehaviorTree/Tasks/BTTask_BlackboardBase.h"
 #include "BTTask_MoveAndWaitEnemy.generated.h"
 
-class ADefaultUnit;
+class AUnitBase;
+
 struct FBTMoveAndWaitEnemy {
 
-  TWeakObjectPtr<ADefaultUnit> self_;
+  TWeakObjectPtr<AUnitBase> self_;
   float range_;
   FVector move_pos_;
 

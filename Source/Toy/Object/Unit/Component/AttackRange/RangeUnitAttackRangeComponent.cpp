@@ -33,7 +33,7 @@ void URangeUnitAttackRangeComponent::Attach(USceneComponent* _parent) {
 
 }
 
-ADefaultUnit* URangeUnitAttackRangeComponent::GetAttackTarget() {
+AUnitBase* URangeUnitAttackRangeComponent::GetAttackTarget() {
 
   SJ_ASSERT((team_flag_ != TeamFlag::kNone));
 

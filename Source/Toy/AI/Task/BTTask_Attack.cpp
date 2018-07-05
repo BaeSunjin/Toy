@@ -1,7 +1,6 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "BTTask_Attack.h"
-#include "Object/Unit/Character/DefaultUnit.h"
 #include "Object/Squad/Squad.h"
 #include "Runtime/AIModule/Classes/BehaviorTree/BlackboardComponent.h"
 

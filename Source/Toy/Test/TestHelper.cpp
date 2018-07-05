@@ -1,9 +1,8 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "TestHelper.h"
-#include "Object/Squad/Squad.h"
 #include "Common/PS_Utils.h"
-#include "Object/Unit/Character/DefaultUnit.h"
+
 
 
 // Sets default values

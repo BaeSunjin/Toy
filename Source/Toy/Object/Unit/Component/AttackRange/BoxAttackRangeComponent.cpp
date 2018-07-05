@@ -34,13 +34,13 @@ void UBoxAttackRangeComponent::Attach(USceneComponent* _parent) {
 
 }
 
-ADefaultUnit* UBoxAttackRangeComponent::GetAttackTarget() {
+AUnitBase* UBoxAttackRangeComponent::GetAttackTarget() {
 
   SJ_ASSERT((team_flag_ != TeamFlag::kNone));
 
   //가장 가까운 적을 가지고 온다.
   FVector owner_locatoin = parent_->GetComponentLocation();
-  FCloseTarget<ADefaultUnit> target;
+  FCloseTarget<AUnitBase> target;
   
   bool find = overlap_object_container_.GetCloseTarget(owner_locatoin, target);
   if (!find) { return nullptr; }
@@ -83,7 +83,7 @@ void UBoxAttackRangeComponent::BeginOverlapCallBack(
     return;
   }
 
-  auto other_actor = Cast<ADefaultUnit>(_other_actor);
+  auto other_actor = Cast<AUnitBase>(_other_actor);
   if (other_actor == nullptr) { return; }
 
   if (other_actor->GetTeamFlag() == TeamFlag::kNone) {
@@ -107,7 +107,7 @@ void UBoxAttackRangeComponent::EndOverlapCallBack(
   UPrimitiveComponent* _other_component,
   int32 _other_body_idx) {
 
-  auto other_actor = Cast<ADefaultUnit>(_other_actor);
+  auto other_actor = Cast<AUnitBase>(_other_actor);
   if (other_actor == nullptr) { return; }
 
   //같은 팀 확인

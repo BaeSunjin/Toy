@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "TestCharacter.h"
-#include "DefaultUnit.h"
+#include "UnitBase.h"
 #include "Engine.h"
 #include "Common/PS_Utils.h"
 #include "Runtime/Engine/Classes/Components/CapsuleComponent.h"
@@ -228,7 +228,7 @@ ASquad* ATestCharacter::GetSquad() {
   return nullptr;
 }
 
-bool ATestCharacter::GetSelectingUnit(ADefaultUnit*& _out) {
+bool ATestCharacter::GetSelectingUnit(AUnitBase*& _out) {
 
   // mouse data
   FVector mouse_pos;
@@ -258,7 +258,7 @@ bool ATestCharacter::GetSelectingUnit(ADefaultUnit*& _out) {
   //not hit
   if (!is_hit) { return false; }
 
-  auto unit = Cast<ADefaultUnit>(hit.Actor);
+  auto unit = Cast<AUnitBase>(hit.Actor);
 
   //not default unit
   if (unit == nullptr) { return false; }
@@ -303,7 +303,7 @@ void ATestCharacter::PressMouseLeft()
   case EMousePossessState::kNon:
   {
     //Get selected unit to mouse pointer
-    ADefaultUnit* unit = nullptr;
+    AUnitBase* unit = nullptr;
     if (!GetSelectingUnit(unit)) { return; }  
 
     if (controlling_squad_ != nullptr) {

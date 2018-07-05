@@ -1,56 +1,24 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-#include "DefaultUnit.h"
+#include "UnitBase.h"
 #include "Common/PS_Utils.h"
-#include "DrawDebugHelpers.h"
-#include "Object/Squad/Squad.h"
-#include "Object/Unit/Controller/DefaultUnitController.h"
 #include "Object/Unit/Component/AttackRange/AttackRangeInterface.h"
-#include "Object/Unit/Component/AttackRange/BoxAttackRangeComponent.h"
-#include "Object/Unit/COmponent/Weapon/TwoHandedAxComponent.h"
-#include "Runtime/AIModule/Classes/AIController.h"
+#include "Object/Unit/Component/Weapon/WeaponComponentBase.h"
+
 #include "Runtime/AIModule/Classes/BehaviorTree/BehaviorTree.h"
-#include "Runtime/AIModule/Classes/Navigation/PathFollowingComponent.h"
-#include "Runtime/Core/Public/Math/NumericLimits.h"
-#include "Runtime/CoreUObject/Public/UObject/ConstructorHelpers.h"
-#include "Runtime/Engine/Classes/Components/BoxComponent.h"
-#include "Runtime/Engine/Classes/Components/StaticMeshComponent.h"
 #include "Runtime/Engine/Classes/Materials/MaterialInstanceDynamic.h"
-#include "Runtime/Engine/Classes/Components/SkeletalMeshComponent.h"
-#include "Runtime/Engine/Classes/Components/CapsuleComponent.h"
-#include "Runtime/Engine/Classes/GameFramework/Actor.h"
-
-
-const static float ATTACK_TARGET_UPDATE_TIME = 1.0f;
 
 // Sets default values
-ADefaultUnit::ADefaultUnit()
+AUnitBase::AUnitBase(const FObjectInitializer& ObjectInitializer)
 {
   // Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
   PrimaryActorTick.bCanEverTick = true;
 
-  // init data setting
-  static_mesh_file_path_ = "SkeletalMesh'/Game/Characters/Animations/TwoHandedSword_AnimsetPro/UE4_Mannequin/Mesh/SK_Mannequin.SK_Mannequin'";
-  animation_blueprint_file_path_ = "AnimBlueprint'/Game/Characters/Animations/TwoHandedSword_AnimsetPro/Animations/AnimBlueprint/2hand_sward_warrior.2hand_sward_warrior'";
-  behavior_tree_file_path_ = "BehaviorTree'/Game/Characters/AI/DefulatUnit_BT.DefulatUnit_BT'";
-  weapon_socket_name_ = "LeftHandSocket";
-  AIControllerClass = ADefaultUnitController::StaticClass();
-  SetAttackRange(125.0f);
-
-  auto weapon_instnace =
-    CreateDefaultSubobject<UTwoHandedAxComponent>(TEXT("Weapon_Component"));
-
-  auto attack_range = CreateDefaultSubobject<UBoxAttackRangeComponent>(
-    TEXT("AttackRangeComponent"));
-
-  Init(weapon_instnace, attack_range);
-
-
-  
 }
 
-void ADefaultUnit::Init(UWeaponComponentBase* _weapon,
-                        IAttackRangeInterface* _attack_range)
+
+void AUnitBase::Init(UWeaponComponentBase* _weapon,
+                     IAttackRangeInterface* _attack_range)
 {
 
   SJ_ASSERT(_weapon);
@@ -66,7 +34,6 @@ void ADefaultUnit::Init(UWeaponComponentBase* _weapon,
   InitMesh();
 
   //---- controller init ----
-
   InitController();
 
   //---- animation init ----
@@ -93,12 +60,13 @@ void ADefaultUnit::Init(UWeaponComponentBase* _weapon,
 }
 
 // Called when the game starts or when spawned
-void ADefaultUnit::BeginPlay()
+void AUnitBase::BeginPlay()
 {
   Super::BeginPlay();
 
   controller_ = Cast<AAIController>(GetController());
 
+  //TODO 삭제 부분 필요.
   // setting test billbard
   test_billboard_ = GetWorld()->SpawnActor(test_billbard_generateed_class_);
   test_billboard_->AttachToActor(this, FAttachmentTransformRules::KeepRelativeTransform);
@@ -108,37 +76,34 @@ void ADefaultUnit::BeginPlay()
 
 
 
-void ADefaultUnit::RunAway() {
+void AUnitBase::RunAway() {
 
-  state_.changed_ = true;
-  state_.run_away_.Key = true;
-  state_.run_away_.Value = true;
+  state_.run_away_.SetData(true);
 
-  test_billboard_->Destroy();
 }
 
-void ADefaultUnit::WorkAttackComponent() {
+void AUnitBase::WorkAttackComponent() {
   attack_range_component_->Work();
 }
 
 
-const TWeakObjectPtr<ASquad>& ADefaultUnit::GetSquad() {
+const TWeakObjectPtr<ASquad>& AUnitBase::GetSquad() {
 
   return squad_;
 
 }
 
-void ADefaultUnit::SetSquad(const TWeakObjectPtr<ASquad>& data) {
+void AUnitBase::SetSquad(const TWeakObjectPtr<ASquad>& data) {
   squad_ = data;
 }
-void ADefaultUnit::SetTeamFlag(const TeamFlag& _team_flag) {
+void AUnitBase::SetTeamFlag(const TeamFlag& _team_flag) {
 
-  team_flag_ = _team_flag;  
+  team_flag_ = _team_flag;
   attack_range_component_->SetTeamFlag(team_flag_);
 }
 
 
-UBlackboardData* ADefaultUnit::GetUnitBlackBoardData() {
+UBlackboardData* AUnitBase::GetUnitBlackBoardData() {
 
   SJ_ASSERT(behavior_);
   SJ_ASSERT(behavior_->BlackboardAsset);
@@ -146,28 +111,28 @@ UBlackboardData* ADefaultUnit::GetUnitBlackBoardData() {
   return behavior_->BlackboardAsset;
 }
 
-UBehaviorTree* ADefaultUnit::GetUnitBehavior() {
+UBehaviorTree* AUnitBase::GetUnitBehavior() {
 
   SJ_ASSERT(behavior_);
   return behavior_;
 }
 
-void ADefaultUnit::SetHighLight(bool _light_on) {
+void AUnitBase::SetHighLight(bool _light_on) {
 
   //UE_LOG(LogTemp, Error, TEXT("On Unit HighLight"));
   high_light_component_->SetVisibility(_light_on);
 
 }
 
-float ADefaultUnit::GetHirzontalInterval() {
+float AUnitBase::GetHirzontalInterval() {
   return horizontal_interval_;
 }
 
-float ADefaultUnit::GetVerticalInterval() {
+float AUnitBase::GetVerticalInterval() {
   return vertical_interval_;
 }
 
-void ADefaultUnit::InitCollision() {
+void AUnitBase::InitCollision() {
 
   FCollisionResponseContainer collision_response;
   collision_response.SetResponse(ECollisionChannel::ECC_WorldStatic, ECollisionResponse::ECR_Block);
@@ -180,7 +145,7 @@ void ADefaultUnit::InitCollision() {
 
 }
 
-void ADefaultUnit::InitHLMesh() {
+void AUnitBase::InitHLMesh() {
 
   high_light_component_ = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("HighLight_Mesh"));
   high_light_component_->SetVisibility(false);
@@ -204,8 +169,8 @@ void ADefaultUnit::InitHLMesh() {
 
 }
 
-void ADefaultUnit::InitMesh() {
-  
+void AUnitBase::InitMesh() {
+
   if (static_mesh_file_path_.Len() == 0) {
 
     UE_LOG(LogTemp, Error,
@@ -213,7 +178,7 @@ void ADefaultUnit::InitMesh() {
     SJ_ASSERT(false);
   }
 
-  static ConstructorHelpers::FObjectFinder<USkeletalMesh> 
+  static ConstructorHelpers::FObjectFinder<USkeletalMesh>
     unit_mesh(*static_mesh_file_path_);
 
   SJ_ASSERT(unit_mesh.Object);
@@ -227,26 +192,26 @@ void ADefaultUnit::InitMesh() {
 
 }
 
-void ADefaultUnit::SetWeapon(UWeaponComponentBase* _new_weapon,
-                              USkeletalMeshComponent* _mesh,
-                              FString _socket_name) {
+void AUnitBase::SetWeapon(UWeaponComponentBase* _new_weapon,
+                          USkeletalMeshComponent* _mesh,
+                          FString _socket_name) {
 
   SJ_ASSERT(_mesh);
   SJ_ASSERT(_new_weapon);
   if (_socket_name.Len() == 0) {
-  
+
     UE_LOG(LogTemp, Error,
       TEXT("%s initfaile not setting weapon socket name"), *GetName());
     SJ_ASSERT(false);
 
   }
-  
+
   weapon_component_ = _new_weapon;
   weapon_component_->AttachTo(_mesh, *_socket_name);
 
 }
 
-void ADefaultUnit::InitController() {
+void AUnitBase::InitController() {
 
   if (AIControllerClass == nullptr) {
 
@@ -255,12 +220,12 @@ void ADefaultUnit::InitController() {
 
     SJ_ASSERT(false);
   }
-  
+
   AutoPossessAI = EAutoPossessAI::Spawned;
 
 }
 
-void ADefaultUnit::InitAnimBlueprint() {
+void AUnitBase::InitAnimBlueprint() {
 
   SJ_ASSERT(unit_mesh_);
 
@@ -274,7 +239,7 @@ void ADefaultUnit::InitAnimBlueprint() {
   }
 
 
-  static ConstructorHelpers::FObjectFinder<UAnimBlueprint> 
+  static ConstructorHelpers::FObjectFinder<UAnimBlueprint>
     anim_blueprint(*animation_blueprint_file_path_);
 
   SJ_ASSERT(anim_blueprint.Object);
@@ -282,14 +247,14 @@ void ADefaultUnit::InitAnimBlueprint() {
 
 }
 
-void ADefaultUnit::InitInterval(float _vertical, float _horizontal) {
+void AUnitBase::InitInterval(float _vertical, float _horizontal) {
 
   vertical_interval_ = _vertical;
   horizontal_interval_ = _horizontal;
 
 }
 
-void ADefaultUnit::InitBehaviorTree() {
+void AUnitBase::InitBehaviorTree() {
 
   if (behavior_tree_file_path_.Len() == 0) {
 
@@ -308,19 +273,16 @@ void ADefaultUnit::InitBehaviorTree() {
 
 }
 
-void ADefaultUnit::InitState() {
+void AUnitBase::InitState() {
 
-  state_.changed_ = true;
-  state_.run_away_.Key = false;
-  state_.run_away_.Value = true;
-
-  state_.hp_.Key = 100;
-  state_.hp_.Value = true;
+  state_.run_away_.SetData(false);
+  state_.hp_.SetData(100);
+  //TODO 나머지값.. 처리 필요.
 
 }
 
-void ADefaultUnit::SetAttackRangeComponent(IAttackRangeInterface* _new_attack_range,
-                                           float _attack_range)
+void AUnitBase::SetAttackRangeComponent(IAttackRangeInterface* _new_attack_range,
+  float _attack_range)
 {
 
   SJ_ASSERT(_new_attack_range);
@@ -330,36 +292,39 @@ void ADefaultUnit::SetAttackRangeComponent(IAttackRangeInterface* _new_attack_ra
     UE_LOG(LogTemp, Error,
       TEXT("%s initfaile not setting attack_range_"), *GetName());
 
-    SJ_ASSERT(false); 
+    SJ_ASSERT(false);
 
   }
-  
+
   attack_range_component_ = _new_attack_range->_getUObject();
   attack_range_component_->Attach(RootComponent);
-  
+
 
   attack_range_ = _attack_range;
   attack_range_component_->SetAttackRange(attack_range_);
 
 }
 
-void ADefaultUnit::OnDamage(int _damega) {
+void AUnitBase::OnDamage(int _damega) {
 
   SJ_ASSERT(_damega);
 
-  state_.changed_ = true;
-  state_.hp_.Key -= _damega;
-  state_.hp_.Value = true;
+  int currnet_hp = state_.hp_.GetValue();
+  currnet_hp -= _damega;
 
+  if (currnet_hp <= 0) {
+    //GetSquad()->RemoveUnit(this);
+    Destroy();
+  }
 }
 
-TeamFlag ADefaultUnit::GetTeamFlag() {
+TeamFlag AUnitBase::GetTeamFlag() {
   return team_flag_;
 }
 
 #if WITH_EDITOR
 
-void ADefaultUnit::HelperUIInit() {
+void AUnitBase::HelperUIInit() {
 
   static ConstructorHelpers::FObjectFinder<UBlueprint> Test_Billboard(TEXT("Blueprint'/Game/UI/WUI/Solider_Idx_.Solider_Idx_'"));
   if (Test_Billboard.Succeeded())
@@ -370,39 +335,37 @@ void ADefaultUnit::HelperUIInit() {
 }
 #endif
 
-void ADefaultUnit::MoveTo(const FVector& _move_pos,
-                          const FVector& _normal_look_at,
-                          const bool& _retreat)
+void AUnitBase::MoveTo(const FVector& _move_pos,
+  const FVector& _normal_look_at,
+  const bool& _retreat)
 {
 
   SJ_ASSERT(_normal_look_at.IsNormalized());
 
-  state_.changed_ = true;
-  state_.retreat_.Key = _retreat;
-  state_.retreat_.Value = true;
-  state_.move_to_.Key = _move_pos;
-  state_.move_to_.Value = true;
-
-  state_.look_at_.Key = _normal_look_at;
-  state_.look_at_.Value = true;
+  state_.retreat_.SetData(_retreat);
+  state_.move_to_.SetData(_move_pos);
+  state_.look_at_.SetData(_normal_look_at);
 
   log_pos_ = _move_pos;
 }
 
+const UnitState& AUnitBase::GetState() {
+  return state_;
+}
 
-void ADefaultUnit::SetAttackTarget(ASquad* _target) {
+
+void AUnitBase::SetAttackTarget(ASquad* _target) {
 
   SJ_ASSERT(_target);
 
-  state_.changed_ = true;
-  state_.attack_target_.Key = _target;
-  state_.attack_target_.Value = true;
+  state_.attack_target_.SetData(_target);
+
 
 }
 
 
 // Called every frame
-void ADefaultUnit::Tick(float _delta_time)
+void AUnitBase::Tick(float _delta_time)
 {
   Super::Tick(_delta_time);
   DrawDebugLine(GetWorld(), log_pos_, log_pos_ + FVector(0, 0, 100.f), FColor::Red);
@@ -420,11 +383,11 @@ void ADefaultUnit::Tick(float _delta_time)
 
 }
 
-bool ADefaultUnit::ExistMovePath() {
+bool AUnitBase::ExistMovePath() {
 
   SJ_ASSERT(controller_);
   auto state = controller_->GetPathFollowingComponent()->GetStatus();
-  
+
   if (state == EPathFollowingStatus::Moving) { return true; }
   return false;
 
@@ -432,7 +395,7 @@ bool ADefaultUnit::ExistMovePath() {
 
 
 
-void ADefaultUnit::Attack() {
+void AUnitBase::Attack() {
 
   auto target = GetAttackTarget();
   if (target == nullptr) { return; }
@@ -442,7 +405,7 @@ void ADefaultUnit::Attack() {
 }
 
 //공격 애니메이션이 실행될떄 바로 적을 처다본다.
-void ADefaultUnit::LookAt() {
+void AUnitBase::LookAt() {
 
   auto target = GetAttackTarget();
   if (target == nullptr) { return; }
@@ -455,25 +418,25 @@ void ADefaultUnit::LookAt() {
 
 }
 
-bool ADefaultUnit::IsExistAttackTarget() {
+bool AUnitBase::IsExistAttackTarget() {
   return exist_attack_taget_;
 }
 
-ADefaultUnit* ADefaultUnit::GetAttackTarget() {
+AUnitBase* AUnitBase::GetAttackTarget() {
 
   SJ_ASSERT(attack_range_component_);
-  ADefaultUnit* target = attack_range_component_->GetAttackTarget();
+  AUnitBase* target = attack_range_component_->GetAttackTarget();
   if (target) {
     exist_attack_taget_ = true;
   }
   else {
     exist_attack_taget_ = false;
   }
-  
+
   return target;
 }
 
 
-void ADefaultUnit::SetAttackRange(float _attack_range) {
+void AUnitBase::SetAttackRange(float _attack_range) {
   attack_range_ = _attack_range;
 }

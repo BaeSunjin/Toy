@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "TwoHandedAxComponent.h"
-#include "Object/Unit/Character/DefaultUnit.h"
+#include "Object/Unit/Character/UnitBase.h"
 #include "Object/Squad/Squad.h"
 
 UTwoHandedAxComponent::UTwoHandedAxComponent(
@@ -13,7 +13,7 @@ UTwoHandedAxComponent::UTwoHandedAxComponent(
 
 }
 
-void UTwoHandedAxComponent::Attack(TWeakObjectPtr<ADefaultUnit> _target) {
+void UTwoHandedAxComponent::Attack(TWeakObjectPtr<AUnitBase> _target) {
 
   if (_target.IsValid()) {
     auto squad = _target.Get()->GetSquad();

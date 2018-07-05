@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/SkeletalMeshComponent.h"
-#include "Object/Unit/Character/DefaultUnit.h"
+#include "Object/Unit/Character/UnitBase.h"
 #include "WeaponComponentBase.generated.h"
 
 
@@ -24,7 +24,7 @@ class TOY_API UWeaponComponentBase : public USkeletalMeshComponent
    void Init();
 
    void AttachTo(USkeletalMeshComponent* _mesh, FName _socket_name);
-   virtual void Attack(TWeakObjectPtr<ADefaultUnit> _target);
+   virtual void Attack(TWeakObjectPtr<AUnitBase> _target);
 
    float GetDemage();
    void SetDemage(float _demage);

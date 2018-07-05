@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "BTTask_MoveAndWaitEnemy.h"
-#include "Object/Unit/Character/DefaultUnit.h"
+#include "Object/Unit/Character/UnitBase.h"
 #include "Runtime/AIModule/Classes/AIController.h"
 #include "Runtime/AIModule/Classes/BehaviorTree/BlackboardComponent.h"
 #include "Runtime/Core/Public/Math/NumericLimits.h"
@@ -32,14 +32,14 @@ EBTNodeResult::Type UBTTask_MoveAndWaitEnemy::ExecuteTask(
   auto self_ptr = _owner_component.GetBlackboardComponent()->
     GetValueAsObject("SelfActor");
 
-  auto default_unit_ptr = Cast<ADefaultUnit>(self_ptr);  
+  auto casted_unit_ptr = Cast<AUnitBase>(self_ptr);  
     
   auto move_to = _owner_component.GetBlackboardComponent()->
     GetValueAsVector("MoveTo");
 
 
   FBTMoveAndWaitEnemy* memory = (FBTMoveAndWaitEnemy*)_node_memoery;
-  memory->self_ = default_unit_ptr;
+  memory->self_ = casted_unit_ptr;
   memory->range_ = attack_range;
   memory->move_pos_ = move_to;
   
@@ -49,7 +49,7 @@ EBTNodeResult::Type UBTTask_MoveAndWaitEnemy::ExecuteTask(
     return EBTNodeResult::Succeeded;
   }
 
-  Cast<AAIController>(default_unit_ptr->GetController())->MoveTo(move_to);
+  Cast<AAIController>(casted_unit_ptr->GetController())->MoveTo(move_to);
   return EBTNodeResult::InProgress;
 
 }

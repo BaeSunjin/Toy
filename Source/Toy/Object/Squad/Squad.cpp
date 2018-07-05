@@ -2,7 +2,7 @@
 
 #include "Squad.h"
 #include "Common/PS_Utils.h"
-#include "Object/Unit/Character/DefaultUnit.h"
+#include "Object/Unit/Character/UnitBase.h"
 #include "Runtime/Core/Public/Math/NumericLimits.h"
 #include "Runtime/Engine/Classes/Components/SphereComponent.h"
 #include "Runtime/Engine/Public/EngineUtils.h"
@@ -393,7 +393,7 @@ bool ASquad::GetRetreat() {
   return retreat_;
 }
 
-void ASquad::RemoveUnit(ADefaultUnit* _unit) {
+void ASquad::RemoveUnit(AUnitBase* _unit) {
 
   SJ_ASSERT(_unit);
 

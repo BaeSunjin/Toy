@@ -5,98 +5,68 @@
 #include "CoreMinimal.h"
 #include "Common/SerialNum.h"
 #include "GameFramework/Character.h"
-#include "Object/Tool/SquadMaker.h"
-#include "Runtime/Core/Public/Containers/Map.h"
-#include "DefaultUnit.generated.h"
+#include "Object/Unit/Character/UnitState.h"
+#include "Rule/Rules.h"
+#include "UnitBase.generated.h"
 
-class AAIController;
-class ASquad;
-class UBoxComponent;
-class UBlackboardData;
-class UBehaviorTree;
-class UCapsuleComponent;
 class IAttackRangeInterface;
 class UWeaponComponentBase;
 
-
-USTRUCT(BlueprintType)
-struct FUnitState {
-
-  GENERATED_USTRUCT_BODY()
-
-public:
-
-  bool changed_;
-
-  
-  // first is value second bool change flag
-  TTuple<bool, bool> retreat_;
-  TTuple<ASquad*, bool> attack_target_;
-  TTuple<bool,bool> run_away_;
-  TTuple<int, bool> hp_;
-  TTuple<FVector, bool> move_to_;
-  TTuple<FVector, bool> look_at_;
-  
-};
+const static float ATTACK_TARGET_UPDATE_TIME = 1.0f;
 
 UCLASS()
-class TOY_API ADefaultUnit : public ACharacter, public SerialNum<ADefaultUnit>
+class TOY_API AUnitBase : public ACharacter, public SerialNum<AUnitBase>
 {
-  GENERATED_BODY()
+	GENERATED_BODY()
 
  public:
    // Sets default values for this character's properties
-   ADefaultUnit();
-
+   AUnitBase(const FObjectInitializer & _initializer);
    // call all init function
    void Init(UWeaponComponentBase* _weapon,
              IAttackRangeInterface* _attack_range);
 
+   void WorkAttackComponent();
+
    const TWeakObjectPtr<ASquad>& GetSquad();
    float GetHirzontalInterval();
    float GetVerticalInterval();
-   ADefaultUnit* GetAttackTarget();
+   AUnitBase* GetAttackTarget();
    TeamFlag GetTeamFlag();
-   bool ExistMovePath();
-   
-   UFUNCTION(BlueprintPure, Category = "AttackTarget")
-   bool IsExistAttackTarget();
+   const UnitState& GetState();
 
    void SetHighLight(bool _light_on);
    void SetAttackTarget(ASquad* _target);
    void SetAttackRange(float _attack_range);
-   
 
-   void RunAway();
-   void OnDamage(int _damega);
+
+   bool ExistMovePath();
+
    void MoveTo(const FVector& _move_pos,
                const FVector& _normal_look_at,
                const bool& _retreat);
 
-   // Called every frame
-   virtual void Tick(float _delta_time) override;
+   UFUNCTION(BlueprintPure, Category = "AttackTarget")
+   bool IsExistAttackTarget();
 
-   //TODO 추가.. 뭔가 필요..;; 게임 시작 시점에서 콜을 해주어야함.
-   void WorkAttackComponent();
-   
    UFUNCTION(BlueprintCallable, Category = "AttackTarget")
    void Attack();
 
    UFUNCTION(BlueprintCallable, Category = "AttackTarget")
    void LookAt();
 
-  
+   virtual void OnDamage(int _damega);
+   virtual void Tick(float _delta_time) override;
 
-  
-  
-  
+
+   void RunAway();
+
  protected:
    // Called when the game starts or when spawned
    virtual void BeginPlay() override;
 
 
  private:
-
 
 #if WITH_EDITOR
    virtual void HelperUIInit();
@@ -121,6 +91,9 @@ class TOY_API ADefaultUnit : public ACharacter, public SerialNum<ADefaultUnit>
    friend class SquadUnitMaker;
    void SetSquad(const TWeakObjectPtr<ASquad>& data);
    void SetTeamFlag(const TeamFlag& _team_flag);
+
+
+  
 
 
    //ADefaultUnitController 에서만 접근 허용
@@ -161,7 +134,7 @@ class TOY_API ADefaultUnit : public ACharacter, public SerialNum<ADefaultUnit>
    UPROPERTY(EditAnywhere, Category = Test)
    class AActor* test_billboard_;
 
-   FUnitState state_;
+   UnitState state_;
    float attack_range_;
 
    // soldier 
@@ -183,4 +156,3 @@ class TOY_API ADefaultUnit : public ACharacter, public SerialNum<ADefaultUnit>
    FString weapon_socket_name_;
 
 };
-

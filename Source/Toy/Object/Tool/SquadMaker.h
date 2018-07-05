@@ -21,7 +21,7 @@ struct FSquadUnitsInfo
   
 };
 
-class ADefaultUnit;
+
 class ASquad;
 
 /**

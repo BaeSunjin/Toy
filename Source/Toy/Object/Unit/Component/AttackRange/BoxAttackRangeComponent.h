@@ -22,7 +22,7 @@ class TOY_API UBoxAttackRangeComponent : public UBoxComponent,
    UBoxAttackRangeComponent(const FObjectInitializer & _initializer);
 
    virtual void Attach(USceneComponent* _parent) override;
-   virtual ADefaultUnit* GetAttackTarget() override;
+   virtual AUnitBase* GetAttackTarget() override;
 
    virtual void SetTeamFlag(const TeamFlag& _team_flag) override;
    virtual void SetAttackRange(const float& _attack_range) override;
@@ -45,7 +45,7 @@ class TOY_API UBoxAttackRangeComponent : public UBoxComponent,
  private:
 
    
-   OverlapObjectContainer<ADefaultUnit> overlap_object_container_;
+   OverlapObjectContainer<AUnitBase> overlap_object_container_;
    
    USceneComponent* parent_;
    TeamFlag team_flag_;

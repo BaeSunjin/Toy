@@ -3,7 +3,7 @@
 #pragma once
 
 #include "Engine.h"
-#include "Object/Unit/Character/DefaultUnit.h"
+#include "Object/Unit/Character/UnitBase.h"
 #include "Rule/Rules.h"
 #include "AttackRangeInterface.generated.h"
 
@@ -26,6 +26,6 @@ public:
   virtual void SetTeamFlag(const TeamFlag& _team_flag) = 0;
   virtual void SetAttackRange(const float& _attack_range) = 0;
 
-  virtual ADefaultUnit* GetAttackTarget() = 0;
+  virtual AUnitBase* GetAttackTarget() = 0;
 
 };

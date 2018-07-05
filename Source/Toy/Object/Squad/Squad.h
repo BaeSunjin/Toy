@@ -8,7 +8,7 @@
 #include "GameFramework/Actor.h"
 #include "Squad.generated.h"
 
-class ADefaultUnit;
+class AUnitBase;
 class USphereComponent;
 
 
@@ -56,7 +56,7 @@ public:
   void SetHighLight(bool _light_on);
   const TeamFlag& GetTeamFlag();
 
-  void RemoveUnit(ADefaultUnit* _unit);
+  void RemoveUnit(AUnitBase* _unit);
 
 private:
 
@@ -85,7 +85,7 @@ private:
 
 public:
 
-  TArray<TWeakObjectPtr<ADefaultUnit>> units_;
+  TArray<TWeakObjectPtr<AUnitBase>> units_;
   FSquadInfo squad_info_;
   FSquadBehaviorState squad_behavior_state_;
   

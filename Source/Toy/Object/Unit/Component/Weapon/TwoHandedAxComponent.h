@@ -17,6 +17,6 @@ class TOY_API UTwoHandedAxComponent : public UWeaponComponentBase
 
  public:
    UTwoHandedAxComponent(const FObjectInitializer & _initializer);
-   virtual void Attack(TWeakObjectPtr<ADefaultUnit> _target) override;
+   virtual void Attack(TWeakObjectPtr<AUnitBase> _target) override;
 
 };

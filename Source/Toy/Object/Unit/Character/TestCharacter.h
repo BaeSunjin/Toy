@@ -6,7 +6,7 @@
 #include "GameFramework/Character.h"
 #include "TestCharacter.generated.h"
 
-class ADefaultUnit;
+class AUnitBase;
 class ASquad;
 class UCameraComponent;
 
@@ -199,7 +199,7 @@ private:
 
   void RotateCamera();
 
-  bool GetSelectingUnit(ADefaultUnit*& _out);
+  bool GetSelectingUnit(AUnitBase*& _out);
   void SetNewSquad(const TWeakObjectPtr<ASquad>& _squad);
 
 public:

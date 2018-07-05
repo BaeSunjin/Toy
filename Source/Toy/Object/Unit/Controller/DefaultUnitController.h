@@ -8,7 +8,7 @@
 
 class UBlackboardComponent;
 class UBehaviorTreeComponent;
-class ADefaultUnit;
+class AUnitBase;
 
 /**
  *
@@ -26,8 +26,10 @@ public:
   virtual void Possess(APawn* _pawn) override;
   virtual void Tick(float _delta_time) override;
 
+  UBlackboardComponent* GetBlackBoardComponent();
+
   UPROPERTY(VisibleAnywhere, Category = ControllUnit)
-  ADefaultUnit* possess_unit_;
+  AUnitBase* possess_unit_;
 
 private:
   UPROPERTY(VisibleAnywhere, Category = BlackBoard)
@@ -36,6 +38,6 @@ private:
   UPROPERTY(VisibleAnywhere, Category = BlackBoard)
   UBehaviorTreeComponent* behavior_tree_component_;
 
-  
+  float black_board_update_timer_;
 
 };

@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "BTTask_RunAway.h"
-#include "Object/Unit/Character/DefaultUnit.h"
+#include "Object/Unit/Character/UnitBase.h"
 #include "Runtime/AIModule/Classes/AIController.h"
 #include "Runtime/AIModule/Classes/BehaviorTree/BlackboardComponent.h"
 
@@ -25,7 +25,7 @@ EBTNodeResult::Type UBTTask_RunAway::ExecuteTask(
   auto owner = _owner_component.GetBlackboardComponent()->
                                 GetValueAsObject("SelfActor");
 
-  auto default_unit = Cast<ADefaultUnit>(owner);
+  auto default_unit = Cast<AUnitBase>(owner);
   auto controller = Cast<AAIController>(_owner_component.GetAIOwner());
 
   FVector move_pos = default_unit->GetActorLocation() + -look_at_ * 1000.0f;
@@ -53,7 +53,7 @@ void UBTTask_RunAway::OnTaskFinished(UBehaviorTreeComponent& _onwer_component,
                                       uint8* _node_memory,
                                       EBTNodeResult::Type _task_result) {
 
-  auto owner = Cast<ADefaultUnit>(_onwer_component.GetBlackboardComponent()->
+  auto owner = Cast<AUnitBase>(_onwer_component.GetBlackboardComponent()->
                                   GetValueAsObject("SelfActor"));
 
   _onwer_component.StopTree();

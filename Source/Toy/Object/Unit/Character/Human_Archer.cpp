@@ -6,10 +6,9 @@
 #include "Runtime/Engine/Classes/Components/CapsuleComponent.h"
 
 
-AHuman_Archer::AHuman_Archer() {
+AHuman_Archer::AHuman_Archer(const FObjectInitializer & _initializer) :
+  Super(_initializer) {
 
-  // Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-  PrimaryActorTick.bCanEverTick = true;
   
   // init data setting
   static_mesh_file_path_ = "SkeletalMesh'/Game/Characters/HumanBowMan/Mesh/erika_archer_bow_arrow.erika_archer_bow_arrow'";

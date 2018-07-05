@@ -4,22 +4,21 @@
 
 #include "CoreMinimal.h"
 #include "Object/Unit/Character/UnitBase.h"
-#include "Human_Archer.generated.h"
+#include "Human_TwoHandedAx.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class TOY_API AHuman_Archer : public AUnitBase
+class TOY_API AHuman_TwoHandedAx : public AUnitBase
 {
-  GENERATED_BODY()
-
+	GENERATED_BODY()
+	
  public:
-
-   AHuman_Archer(const FObjectInitializer & _initializer);
-
-
-   // Called every frame
+   AHuman_TwoHandedAx(const FObjectInitializer & _initializer);
+	
+   virtual void OnDamage(int _damega);
    virtual void Tick(float _delta_time) override;
+
 
 };

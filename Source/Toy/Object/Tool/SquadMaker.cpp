@@ -4,7 +4,8 @@
 #include "Common/PS_Utils.h"
 #include "Engine.h"
 #include "Object/Squad/Squad.h"
-#include "Object/Unit/Character/DefaultUnit.h"
+#include "Object/Unit/Character/UnitBase.h"
+#include "Object/Unit/Character/Human_TwoHandedAx.h"
 
 
 class SquadUnitMaker {
@@ -56,7 +57,7 @@ void SquadUnitMaker::CreateUnits(const FSquadUnitsInfo& _squad_units_info,
   for (int i = 0; i < _squad_units_info.unit_num_; i++) {
     if (generate_class != nullptr) {
       auto new_unit = GWorld->SpawnActor(generate_class);
-      auto cunverted_pointer = Cast<ADefaultUnit>(new_unit);
+      auto cunverted_pointer = Cast<AUnitBase>(new_unit);
       _squad->units_.Add(cunverted_pointer);
     }
   }
@@ -89,7 +90,7 @@ UClass* SquadUnitMaker::GetGenerateClass(const EPlayerRace& _race)
   switch (_race)
   {
   case EPlayerRace::kHuman:
-    _ret = ADefaultUnit::StaticClass();
+    _ret = AHuman_TwoHandedAx::StaticClass();
     break;
   default:
 

@@ -23,7 +23,7 @@ class TOY_API URangeUnitAttackRangeComponent : public UBoxComponent,
    URangeUnitAttackRangeComponent(const FObjectInitializer & _initializer);
 
    virtual void Attach(USceneComponent* _parent) override;
-   virtual ADefaultUnit* GetAttackTarget() override;
+   virtual AUnitBase* GetAttackTarget() override;
 
    virtual void SetTeamFlag(const TeamFlag& _team_flag) override;
    virtual void SetAttackRange(const float& _attack_range) override;

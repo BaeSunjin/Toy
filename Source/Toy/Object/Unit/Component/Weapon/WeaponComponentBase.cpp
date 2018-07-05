@@ -22,7 +22,7 @@ void UWeaponComponentBase::AttachTo(USkeletalMeshComponent* _mesh,
     _socket_name);
 
 }
-void UWeaponComponentBase::Attack(TWeakObjectPtr<ADefaultUnit> _target) {
+void UWeaponComponentBase::Attack(TWeakObjectPtr<AUnitBase> _target) {
 
 }
 
