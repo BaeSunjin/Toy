@@ -19,6 +19,8 @@ class TOY_API UBoxAttackRangeComponent : public UBoxComponent,
 	
  public:
 
+   UBoxAttackRangeComponent(const FObjectInitializer & _initializer);
+
    virtual void Attach(USceneComponent* _parent) override;
    virtual ADefaultUnit* GetAttackTarget() override;
 
@@ -38,15 +40,11 @@ class TOY_API UBoxAttackRangeComponent : public UBoxComponent,
    void EndOverlapCallBack(UPrimitiveComponent* _overlap_component,
        AActor* _other_actor,
        UPrimitiveComponent* _other_component,
-       int32 _other_body_idx);
-
- protected:
-
-   UBoxAttackRangeComponent();
+       int32 _other_body_idx);   
 
  private:
 
-
+   
    OverlapObjectContainer<ADefaultUnit> overlap_object_container_;
    
    USceneComponent* parent_;

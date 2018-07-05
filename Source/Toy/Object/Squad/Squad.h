@@ -3,11 +3,14 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Common/SerialNum.h"
 #include "Rule/Rules.h"
 #include "GameFramework/Actor.h"
 #include "Squad.generated.h"
 
 class ADefaultUnit;
+class USphereComponent;
+
 
 enum class FSquadBehaviorState {
 
@@ -36,7 +39,7 @@ struct FSquadInfo {
 
 
 UCLASS()
-class TOY_API ASquad : public AActor
+class TOY_API ASquad : public AActor, public SerialNum<ASquad>
 {
 	GENERATED_BODY()
 	
@@ -66,7 +69,7 @@ private:
   bool MakeGoals(const FVector& _move_pos, TArray<FVector>& _out_goals);
 
   bool CheckNeedRearrange(const FVector2D& _move_dir);
-
+  void MoveUpdate(float _delata);
 
   //대열 초기화
   void RearrangeSquad(const TArray<FVector>& goals);
@@ -102,19 +105,24 @@ public:
 
   void SetControlling(bool _controlling);
 
-private:
+ private:
 
-  bool retreat_;
-  bool controlling_;
+   bool retreat_;
+   bool controlling_;
 
-  FVector2D squad_forward_;
-  FVector2D squad_right_;
+   FVector2D squad_forward_;
+   FVector2D squad_right_;
 
-  FVector2D squad_pos_;
-  TeamFlag team_flag_;
+   FVector2D squad_pos_;
+   TeamFlag team_flag_;
 
-  UPROPERTY(VisibleDefaultsOnly)
-  USceneComponent* root_component_;
+   UPROPERTY(VisibleDefaultsOnly)
+   USceneComponent* root_component_;
+
+   UPROPERTY(VisibleDefaultsOnly)
+   USphereComponent* collsion_component_;
+
+   float position_update_timer_;
 
 };
 

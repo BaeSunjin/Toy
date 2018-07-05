@@ -2,7 +2,9 @@
 
 #pragma once
 
-#define ECC_MouseRay ECC_EngineTraceChannel1
+#define ECC_MouseRay ECC_GameTraceChannel1
+#define ECC_Squad ECC_GameTraceChannel2
+#define ECC_Trigger ECC_GameTraceChannel3
 
 
 namespace SJ_RotateUtills {

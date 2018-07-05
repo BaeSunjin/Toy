@@ -174,6 +174,7 @@ void ADefaultUnit::InitCollision() {
   collision_response.SetResponse(ECollisionChannel::ECC_WorldDynamic, ECollisionResponse::ECR_Block);
   collision_response.SetResponse(ECollisionChannel::ECC_MouseRay, ECollisionResponse::ECR_Block);
   collision_response.SetResponse(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Overlap);
+  collision_response.SetResponse(ECollisionChannel::ECC_Trigger, ECollisionResponse::ECR_Overlap);
 
   GetCapsuleComponent()->SetCollisionResponseToChannels(collision_response);
 

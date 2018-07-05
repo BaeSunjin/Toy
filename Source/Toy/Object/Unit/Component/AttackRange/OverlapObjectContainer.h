@@ -46,7 +46,6 @@ private:
   UPROPERTY(VisibleAnywhere, Category = AttackRange)
   TArray<TWeakObjectPtr<T>> targets_;
 
-
 };
 
 
@@ -61,11 +60,11 @@ OverlapObjectContainer<T>::~OverlapObjectContainer() {}
 
 template <typename T>
 bool OverlapObjectContainer<T>::GetCloseTarget(const FVector& _locatoin,
-                                            FCloseTarget<T>& _out) {
+                                               FCloseTarget<T>& _out) {
 
   float short_distance = TNumericLimits< float >::Max();
-  ADefaultUnit* attack_target = nullptr;
-  //std::lock_guard<std::mutex> guard(mutex_);  
+  T* attack_target = nullptr;
+  
   for (auto target : targets_) {
     if (target.IsValid()) {
       float distance = FVector::DistSquared(

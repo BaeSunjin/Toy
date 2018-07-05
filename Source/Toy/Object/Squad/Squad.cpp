@@ -2,16 +2,20 @@
 
 #include "Squad.h"
 #include "Common/PS_Utils.h"
-#include <limits>
 #include "Object/Unit/Character/DefaultUnit.h"
+#include "Runtime/Core/Public/Math/NumericLimits.h"
+#include "Runtime/Engine/Classes/Components/SphereComponent.h"
 #include "Runtime/Engine/Public/EngineUtils.h"
 #include "Runtime/Engine/Classes/Engine/World.h"
+
 
 
 #define REARRAGNE_DEGREE 0.7071f
 #define MIN_SQUAD_UNIT 7
 #define MoveAttackDistance 2
 #define WaitAttackDistnace 1
+
+const static float POSITION_UPDATE_TIME = 1.0f;
 
 // Sets default values
 ASquad::ASquad()
@@ -29,7 +33,24 @@ ASquad::ASquad()
   squad_behavior_state_ = FSquadBehaviorState::kWait;
   retreat_ = false;
   controlling_ = false;
+
+  //
   
+  collsion_component_ = 
+    CreateDefaultSubobject<USphereComponent>(TEXT("Collision"));
+  
+  collsion_component_->AttachToComponent(RootComponent,
+    FAttachmentTransformRules::KeepRelativeTransform);
+  
+  collsion_component_->SetRelativeLocation(FVector(0.0f, 0.0f, 0.0f));
+  collsion_component_->SetSphereRadius(32.0f);
+  collsion_component_->
+    SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+
+  collsion_component_->SetCollisionObjectType(ECollisionChannel::ECC_Squad);
+
+  
+
 }
 
 void ASquad::Init(const FVector& _pos, const FVector2D& _forward,
@@ -44,6 +65,10 @@ void ASquad::Init(const FVector& _pos, const FVector2D& _forward,
   InitUnitTransform();
 
   team_flag_ = _team_flag;
+
+  collsion_component_->
+    SetCollisionResponseToChannel(ECollisionChannel::ECC_Trigger,
+      ECollisionResponse::ECR_Overlap);
 
 }
 
@@ -230,7 +255,7 @@ void ASquad::RearrangeSquad(const TArray<FVector>& goals)
   for (int goal_idx = 0 ; goal_idx < (goal_num - 1) ; goal_idx++) {
 
     int near_unit_idx = goal_idx;
-    float length = std::numeric_limits<float>::max();
+    float length = TNumericLimits< float >::Max();
 
     for (int unit_idx = goal_idx; unit_idx < array_num; unit_idx++) {
 
@@ -311,6 +336,9 @@ void ASquad::Tick(float DeltaTime)
       }
     }
   }
+
+  MoveUpdate(DeltaTime);
+
 }
 
 void ASquad::SetAttackTargetToUnits(ASquad* _squad) {
@@ -334,6 +362,27 @@ const TeamFlag& ASquad::GetTeamFlag() {
   return team_flag_;
 }
 
+
+void ASquad::MoveUpdate(float _delata) {
+
+  position_update_timer_ += _delata;
+  if (position_update_timer_ < POSITION_UPDATE_TIME) { return; }
+  else { position_update_timer_ = 0.0f; }
+
+  int unit_num = units_.Num();
+  int half = unit_num / 2;
+
+  if (half == 0) { 
+    UE_LOG(LogTemp, Error, TEXT("Squad Move Update someting wrong"));
+    return;
+  }
+
+  if (!units_[half].IsValid()) { return; }
+  
+  SetActorLocation(
+    units_[half].Get()->GetActorLocation());
+
+}
 
 void ASquad::SetRetreat(const bool& _retreat) {
   retreat_ = _retreat;
